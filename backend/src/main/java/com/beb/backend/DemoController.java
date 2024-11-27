@@ -9,6 +9,6 @@ public class DemoController {
 
     @GetMapping("/demo")
     public String demo(){
-        return "hi-jenkins-test11111";
+        return "hi-jenkins-test2222";
     }
 }
