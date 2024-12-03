@@ -43,4 +43,30 @@ public class MemberController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    /**
+     * 사용할 수 있는 닉네임인지 확인하여 응답으로 반환
+     * @param nickname (String) 확인할 닉네임
+     */
+    @GetMapping("/nickname-availability")
+    public ResponseEntity<BaseResponseDto<AvailabilityResponseDto>> checkNicknameAvailability(@RequestParam String nickname) {
+        try {
+            // TODO: nickname 형식 검사
+            // nickname 중복 검사
+            BaseResponseDto<AvailabilityResponseDto> response;
+            AvailabilityResponseDto availabilityResponseDto = new AvailabilityResponseDto(!memberService.isNicknameDuplicated(nickname));
+            if (availabilityResponseDto.isAvailable()) {
+                response = BaseResponseDto.success(availabilityResponseDto, new BaseResponseDto.Meta("사용 가능한 닉네임"));
+            } else {
+                response = BaseResponseDto.success(availabilityResponseDto, new BaseResponseDto.Meta("이미 존재하는 닉네임"));
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (IllegalArgumentException e) {
+            BaseResponseDto<AvailabilityResponseDto> response = BaseResponseDto.fail("잘못된 닉네임 형식");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception e) {
+            BaseResponseDto<AvailabilityResponseDto> response = BaseResponseDto.fail(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }

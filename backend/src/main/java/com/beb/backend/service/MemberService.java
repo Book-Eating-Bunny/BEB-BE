@@ -18,4 +18,13 @@ public class MemberService {
     public boolean isEmailDuplicated(String email) {
         return memberRepository.existsByEmail(email);
     }
+
+    /**
+     * 닉네임이 DB의 회원 테이블에 존재하는지 반환
+     * @param nickname (String) 확인할 닉네임
+     * @return (boolean) 이미 존재하는 닉네임이면 true, 아니면 false
+     */
+    public boolean isNicknameDuplicated(String nickname) {
+        return memberRepository.existsByNickname(nickname);
+    }
 }

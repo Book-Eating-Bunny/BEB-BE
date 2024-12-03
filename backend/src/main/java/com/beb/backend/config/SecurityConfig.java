@@ -15,7 +15,10 @@ public class SecurityConfig {
         http
                 .csrf((csrfConfig) -> csrfConfig.disable())
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/h2-console/**", "/api/v1/users/signup", "/api/v1/users/email-availability","/error").permitAll() // H2 콘솔 허용
+                        .requestMatchers("/h2-console/**", "/error",
+                                "/api/v1/users/signup",
+                                "/api/v1/users/email-availability",
+                                "/api/v1/users/nickname-availability").permitAll() // H2 콘솔 허용
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 )
                 .headers((hc) -> hc.frameOptions((foc) -> foc.disable()));  // H2 콘솔에서 프레임 허용
