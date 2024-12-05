@@ -7,7 +7,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -117,6 +119,28 @@ public class MemberController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         } catch (Exception e) {
             BaseResponseDto<TokenResponseDto> response = BaseResponseDto.fail(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * 현재 인증된 사용자의 프로필(닉네임, 프로필 사진) 정보 반환
+     */
+    @GetMapping("/me")
+    public ResponseEntity<BaseResponseDto<ProfileResponseDto>> getCurrentUserProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail("인증 실패"));
+        }
+
+        try {
+            ProfileResponseDto profile = memberService.getUserProfileByEmail(authentication.getName());
+            BaseResponseDto<ProfileResponseDto> response = BaseResponseDto.success(
+                    profile, new BaseResponseDto.Meta("프로필 조회 성공")
+            );
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            BaseResponseDto<ProfileResponseDto> response = BaseResponseDto.fail(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

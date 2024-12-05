@@ -4,14 +4,15 @@ import com.beb.backend.auth.BebAuthenticationProvider;
 import com.beb.backend.auth.JwtGenerator;
 import com.beb.backend.domain.Member;
 import com.beb.backend.dto.LoginRequestDto;
-import com.beb.backend.dto.TokenResponseDto;
+import com.beb.backend.dto.ProfileResponseDto;
 import com.beb.backend.dto.SignUpRequestDto;
+import com.beb.backend.dto.TokenResponseDto;
 import com.beb.backend.repository.MemberRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -89,5 +90,16 @@ public class MemberService {
         String accessToken = jwtGenerator.createAccessToken(authentication.getName());
         String refreshToken = jwtGenerator.createRefreshToken(authentication.getName());
         return new TokenResponseDto(accessToken, refreshToken);
+    }
+
+    /**
+     * 입력된 email로 DB에 저장된 회원을 찾아 그 프로필 (닉네임, 프로필 사진) 정보 반환
+     * @param email (String) 이메일
+     * @return (ProfileResponseDto)
+     */
+    public ProfileResponseDto getUserProfileByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .map(member -> new ProfileResponseDto(member.getNickname(), member.getProfileImgPath()))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }
