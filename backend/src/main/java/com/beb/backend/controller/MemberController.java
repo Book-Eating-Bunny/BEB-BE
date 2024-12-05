@@ -1,7 +1,9 @@
 package com.beb.backend.controller;
 
+import com.beb.backend.common.ValidationRegexConstants;
 import com.beb.backend.dto.*;
 import com.beb.backend.service.MemberService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +23,7 @@ public class MemberController {
      */
     @PostMapping("/signup")
     public ResponseEntity<BaseResponseDto<TokenResponseDto>> signUp(
-            @RequestBody SignUpRequestDto request) {
+            @RequestBody @Valid SignUpRequestDto request) {
         try {
             TokenResponseDto tokenResponse = memberService.signUp(request);
             BaseResponseDto<TokenResponseDto> response = BaseResponseDto.success(
@@ -36,11 +38,11 @@ public class MemberController {
         }
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<String> test() {
-        String str = "test success";
-        return ResponseEntity.status(HttpStatus.OK).body(str);
-    }
+//    @GetMapping("/test")
+//    public ResponseEntity<String> test() {
+//        String str = "test success";
+//        return ResponseEntity.status(HttpStatus.OK).body(str);
+//    }
 
     /**
      * 사용할 수 있는 이메일인지 확인하여 응답으로 반환
@@ -49,10 +51,12 @@ public class MemberController {
     @GetMapping("/email-availability")
     public ResponseEntity<BaseResponseDto<AvailabilityResponseDto>> checkEmailAvailability(@RequestParam String email) {
         try {
-            // TODO: email 형식 검사
+            // email 형식 검사
+            if (!email.matches(ValidationRegexConstants.EMAIL_REGEX)) throw new IllegalArgumentException("잘못된 이메일 형식");
             // email 중복 검사
             BaseResponseDto<AvailabilityResponseDto> response;
             AvailabilityResponseDto availabilityResponseDto = new AvailabilityResponseDto(!memberService.isEmailDuplicated(email));
+
             if (availabilityResponseDto.isAvailable()) {
                 response = BaseResponseDto.success(availabilityResponseDto, new BaseResponseDto.Meta("사용 가능한 이메일"));
             } else {
@@ -60,7 +64,7 @@ public class MemberController {
             }
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (IllegalArgumentException e) {
-            BaseResponseDto<AvailabilityResponseDto> response = BaseResponseDto.fail("잘못된 이메일 형식");
+            BaseResponseDto<AvailabilityResponseDto> response = BaseResponseDto.fail(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception e) {
             BaseResponseDto<AvailabilityResponseDto> response = BaseResponseDto.fail(e.getMessage());
@@ -75,10 +79,12 @@ public class MemberController {
     @GetMapping("/nickname-availability")
     public ResponseEntity<BaseResponseDto<AvailabilityResponseDto>> checkNicknameAvailability(@RequestParam String nickname) {
         try {
-            // TODO: nickname 형식 검사
+            // nickname 형식 검사
+            if (!nickname.matches(ValidationRegexConstants.NICKNAME_REGEX)) throw new IllegalArgumentException("잘못된 닉네임 형식");
             // nickname 중복 검사
             BaseResponseDto<AvailabilityResponseDto> response;
             AvailabilityResponseDto availabilityResponseDto = new AvailabilityResponseDto(!memberService.isNicknameDuplicated(nickname));
+
             if (availabilityResponseDto.isAvailable()) {
                 response = BaseResponseDto.success(availabilityResponseDto, new BaseResponseDto.Meta("사용 가능한 닉네임"));
             } else {
@@ -86,7 +92,7 @@ public class MemberController {
             }
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (IllegalArgumentException e) {
-            BaseResponseDto<AvailabilityResponseDto> response = BaseResponseDto.fail("잘못된 닉네임 형식");
+            BaseResponseDto<AvailabilityResponseDto> response = BaseResponseDto.fail(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception e) {
             BaseResponseDto<AvailabilityResponseDto> response = BaseResponseDto.fail(e.getMessage());

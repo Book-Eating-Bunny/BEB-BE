@@ -1,9 +1,9 @@
 package com.beb.backend.dto;
 
-import org.springframework.lang.NonNull;
+import jakarta.validation.constraints.NotNull;
 
 public record LoginRequestDto(
-        @NonNull String email,
-        @NonNull String password
+        @NotNull String email,
+        @NotNull String password
 ) {
 }

@@ -33,7 +33,6 @@ public class MemberService {
         if (isEmailDuplicated(request.email())) throw new IllegalArgumentException("Email already in use");
         if (isNicknameDuplicated(request.nickname())) throw new IllegalArgumentException("Nickname already in use");
 
-        // TODO: 비밀번호 형식 검증
         String encodedPassword = passwordEncoder.encode(request.password());
         // 회원 생성
         Member member = Member.builder()
