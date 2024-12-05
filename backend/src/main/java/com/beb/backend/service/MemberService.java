@@ -1,13 +1,13 @@
 package com.beb.backend.service;
 
 import com.beb.backend.auth.BebAuthenticationProvider;
+import com.beb.backend.auth.JwtGenerator;
 import com.beb.backend.domain.Member;
 import com.beb.backend.dto.LoginRequestDto;
-import com.beb.backend.dto.LoginResponseDto;
-import com.beb.backend.dto.MemberSignUpRequestDto;
 import com.beb.backend.dto.TokenResponseDto;
-import com.beb.backend.auth.JwtGenerator;
+import com.beb.backend.dto.SignUpRequestDto;
 import com.beb.backend.repository.MemberRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,10 +24,18 @@ public class MemberService {
     private final AuthenticationManager authenticationManager;
     private final JwtGenerator jwtGenerator;
 
-    public TokenResponseDto signUp(MemberSignUpRequestDto request) {
-        // TODO: 이메일 중복 확인, 닉네임 중복 확인
-        String encodedPassword = passwordEncoder.encode(request.password());
+    /**
+     * 입력된 회원 정보로 회원을 생성하고 액세스 토큰과 리프레시 토큰 반환
+     * @param request (MemberSignUpRequestDto)
+     * @return (TokenResponseDto)
+     */
+    public TokenResponseDto signUp(SignUpRequestDto request) {
+        if (isEmailDuplicated(request.email())) throw new IllegalArgumentException("Email already in use");
+        if (isNicknameDuplicated(request.nickname())) throw new IllegalArgumentException("Nickname already in use");
 
+        // TODO: 비밀번호 형식 검증
+        String encodedPassword = passwordEncoder.encode(request.password());
+        // 회원 생성
         Member member = Member.builder()
                 .email(request.email())
                 .password(encodedPassword)
@@ -35,11 +43,11 @@ public class MemberService {
                 .age(request.age())
                 .gender(request.gender())
                 .profileImgPath(request.profileImgPath()).build();
-
+        // 회원 저장
         Member savedMember = memberRepository.save(member);
-        // TODO: 토큰 발급
-        String accessToken = "";
-        String refreshToken = "";
+        // 토큰 발급. TODO: Refresh token 저장
+        String accessToken = jwtGenerator.createAccessToken(savedMember.getEmail());
+        String refreshToken = jwtGenerator.createRefreshToken(savedMember.getEmail());
         return new TokenResponseDto(accessToken, refreshToken);
     }
 
@@ -65,13 +73,13 @@ public class MemberService {
      * 입력된 이메일(로그인 ID), 비밀번호로 인증. 성공 시 액세스 토큰, 리프레시 토큰 반환
      * Spring Security의 AuthenticationManager 이용
      * @param request (LoginRequestDto) "email", "password"
-     * @return (LoginResponseDto)
+     * @return (TokenResponseDto)
      *
      * @see com.beb.backend.config.SecurityConfig
      * @see BebAuthenticationProvider
      * @see JwtGenerator
      */
-    public LoginResponseDto login(LoginRequestDto request) {
+    public TokenResponseDto login(LoginRequestDto request) {
         // 1. 인증 객체 생성 & Spring Security 인증 작업 수동 호출
         Authentication authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(request.email(), request.password())
@@ -81,6 +89,6 @@ public class MemberService {
         // 2. 인증 완료 시 JWT 생성
         String accessToken = jwtGenerator.createAccessToken(authentication.getName());
         String refreshToken = jwtGenerator.createRefreshToken(authentication.getName());
-        return new LoginResponseDto(accessToken, refreshToken);
+        return new TokenResponseDto(accessToken, refreshToken);
     }
 }

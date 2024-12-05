@@ -15,9 +15,13 @@ public class MemberController {
 
     private final MemberService memberService;
 
+    /**
+     * 입력된 정보로 회원을 생성하고 액세스 토큰과 리프레시 토큰을 반환
+     * @param request (MemberSignUpRequestDto)
+     */
     @PostMapping("/signup")
     public ResponseEntity<BaseResponseDto<TokenResponseDto>> signUp(
-            @RequestBody MemberSignUpRequestDto request) {
+            @RequestBody SignUpRequestDto request) {
         try {
             TokenResponseDto tokenResponse = memberService.signUp(request);
             BaseResponseDto<TokenResponseDto> response = BaseResponseDto.success(
@@ -95,18 +99,18 @@ public class MemberController {
      * @param loginRequest (LoginRequestDto) "email", "password"
      */
     @PostMapping("/login")
-    public ResponseEntity<BaseResponseDto<LoginResponseDto>> login(@RequestBody LoginRequestDto loginRequest) {
+    public ResponseEntity<BaseResponseDto<TokenResponseDto>> login(@RequestBody LoginRequestDto loginRequest) {
         try {
-            LoginResponseDto loginResponse = memberService.login(loginRequest);
-            BaseResponseDto<LoginResponseDto> response = BaseResponseDto.success(
+            TokenResponseDto loginResponse = memberService.login(loginRequest);
+            BaseResponseDto<TokenResponseDto> response = BaseResponseDto.success(
                     loginResponse, new BaseResponseDto.Meta("로그인 성공")
             );
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (AuthenticationException e) {
-            BaseResponseDto<LoginResponseDto> response = BaseResponseDto.fail("로그인 실패");
+            BaseResponseDto<TokenResponseDto> response = BaseResponseDto.fail("로그인 실패");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         } catch (Exception e) {
-            BaseResponseDto<LoginResponseDto> response = BaseResponseDto.fail(e.getMessage());
+            BaseResponseDto<TokenResponseDto> response = BaseResponseDto.fail(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
