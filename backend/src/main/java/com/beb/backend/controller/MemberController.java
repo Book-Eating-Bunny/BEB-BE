@@ -1,15 +1,12 @@
 package com.beb.backend.controller;
 
-import com.beb.backend.dto.AvailabilityResponseDto;
-import com.beb.backend.dto.BaseResponseDto;
+import com.beb.backend.dto.*;
 import com.beb.backend.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,6 +14,29 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
     private final MemberService memberService;
+
+    @PostMapping("/signup")
+    public ResponseEntity<BaseResponseDto<TokenResponseDto>> signUp(
+            @RequestBody MemberSignUpRequestDto request) {
+        try {
+            TokenResponseDto tokenResponse = memberService.signUp(request);
+            BaseResponseDto<TokenResponseDto> response = BaseResponseDto.success(
+                    tokenResponse, new BaseResponseDto.Meta("회원 가입 성공"));
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            BaseResponseDto<TokenResponseDto> response = BaseResponseDto.fail("잘못된 요청");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception e) {
+            BaseResponseDto<TokenResponseDto> response = BaseResponseDto.fail(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        String str = "test success";
+        return ResponseEntity.status(HttpStatus.OK).body(str);
+    }
 
     /**
      * 사용할 수 있는 이메일인지 확인하여 응답으로 반환
@@ -66,6 +86,27 @@ public class MemberController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception e) {
             BaseResponseDto<AvailabilityResponseDto> response = BaseResponseDto.fail(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * 입력된 이메일(로그인 ID)과 비밀번호를 확인하여 인증 성공 시 액세스 토큰, 리프레시 토큰 반환
+     * @param loginRequest (LoginRequestDto) "email", "password"
+     */
+    @PostMapping("/login")
+    public ResponseEntity<BaseResponseDto<LoginResponseDto>> login(@RequestBody LoginRequestDto loginRequest) {
+        try {
+            LoginResponseDto loginResponse = memberService.login(loginRequest);
+            BaseResponseDto<LoginResponseDto> response = BaseResponseDto.success(
+                    loginResponse, new BaseResponseDto.Meta("로그인 성공")
+            );
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (AuthenticationException e) {
+            BaseResponseDto<LoginResponseDto> response = BaseResponseDto.fail("로그인 실패");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        } catch (Exception e) {
+            BaseResponseDto<LoginResponseDto> response = BaseResponseDto.fail(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

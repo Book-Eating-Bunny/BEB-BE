@@ -1,4 +1,4 @@
-package com.beb.backend.jwt;
+package com.beb.backend.auth;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
