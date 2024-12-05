@@ -1,6 +1,7 @@
 package com.beb.backend.config;
 
 import com.beb.backend.auth.BebAuthenticationProvider;
+import com.beb.backend.auth.JwtValidatorFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
 @RequiredArgsConstructor
@@ -33,8 +35,8 @@ public class SecurityConfig {
                                 "/api/v1/users/nickname-availability").permitAll()
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-//                .addFilterBefore(new JwtValidatorFilter(env), BasicAuthenticationFilter.class);
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(new JwtValidatorFilter(env), BasicAuthenticationFilter.class);
         return httpSecurity.build();
     }
 
@@ -43,7 +45,6 @@ public class SecurityConfig {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
-    // api 로그인: 인증 프로세스를 수동으로 시작하려면 빈을 생성해야.
     @Bean
     public AuthenticationManager authenticationManager(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
         BebAuthenticationProvider authenticationProvider = new BebAuthenticationProvider(userDetailsService, passwordEncoder);
