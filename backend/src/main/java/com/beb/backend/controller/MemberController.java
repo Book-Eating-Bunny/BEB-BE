@@ -41,12 +41,6 @@ public class MemberController {
         }
     }
 
-//    @GetMapping("/test")
-//    public ResponseEntity<String> test() {
-//        String str = "test success";
-//        return ResponseEntity.status(HttpStatus.OK).body(str);
-//    }
-
     /**
      * 사용할 수 있는 이메일인지 확인하여 응답으로 반환
      * @param email (String) 확인할 이메일 주소
@@ -139,6 +133,21 @@ public class MemberController {
             ));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponseDto.fail(e.getMessage()));
+        }
+    }
+
+    /**
+     * 현재 인증된 사용자를 로그아웃 처리
+     * @param authorization (String) 헤더에 저장된 Authorization 값. "Bearer {액세스 토큰}" 이어야 함.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<BaseResponseDto<Void>> logout(@RequestHeader(value = HttpHeaders.AUTHORIZATION) String authorization) {
+        try {
+            String accessToken = authorization.split(" ")[1];
+            memberService.logout(accessToken);
+            return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("로그아웃 성공"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponseDto.fail(e.getMessage()));
         }

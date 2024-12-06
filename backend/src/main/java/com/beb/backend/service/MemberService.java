@@ -125,6 +125,17 @@ public class MemberService {
     }
 
     /**
+     * 입력된 액세스 토큰으로부터 현재 인증된 사용자를 확인하여 그 사용자의 리프레시 토큰을 DB에서 삭제
+     * @param accessToken (String) 액세스 토큰
+     */
+    @Transactional
+    public void logout(String accessToken) {
+        String username = jwtUtils.getUsernameFromToken(accessToken);
+        refreshTokenRepository.deleteByUsername(username);
+        // TODO: 로그아웃한 사용자의 액세스 토큰 저장 (추후 Redis 연결 시 추가)
+    }
+
+    /**
      * 입력된 email로 DB에 저장된 회원을 찾아 그 프로필 (닉네임, 프로필 사진) 정보 반환
      * @param email (String) 이메일
      * @return (ProfileResponseDto)
