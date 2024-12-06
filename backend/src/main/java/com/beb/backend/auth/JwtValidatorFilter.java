@@ -29,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 public class JwtValidatorFilter extends OncePerRequestFilter {
 
     private final Environment env;
+    private static final String BEARER_PREFIX = "Bearer ";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -36,7 +37,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         try {
             final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-            if (authorization == null || !authorization.startsWith("Bearer ")) {
+            if (authorization == null || !authorization.startsWith(BEARER_PREFIX)) {
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -54,7 +55,6 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
             Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, null);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (ExpiredJwtException e) {
-            // 토큰 만료. TODO: 리프레시 토큰 발급
             throw new BadCredentialsException("Expired JWT.");
         } catch (JwtException e) {
             throw new BadCredentialsException("Invalid JWT. " + e.getMessage());
