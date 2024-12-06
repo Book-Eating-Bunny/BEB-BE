@@ -3,15 +3,14 @@ package com.beb.backend.service;
 import com.beb.backend.auth.BebAuthenticationProvider;
 import com.beb.backend.auth.JwtGenerator;
 import com.beb.backend.domain.Member;
-import com.beb.backend.dto.LoginRequestDto;
-import com.beb.backend.dto.ProfileResponseDto;
-import com.beb.backend.dto.SignUpRequestDto;
-import com.beb.backend.dto.TokenResponseDto;
+import com.beb.backend.dto.*;
 import com.beb.backend.repository.MemberRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -101,5 +100,25 @@ public class MemberService {
         return memberRepository.findByEmail(email)
                 .map(member -> new ProfileResponseDto(member.getNickname(), member.getProfileImgPath()))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    /**
+     * 현재 인증된 사용자 프로필을 입력된 정보로 수정 (비밀번호, 닉네임, 나이, 성별, 프로필 사진 수정 가능)
+     * @param request (UpdateProfileRequestDto)
+     */
+    @Transactional
+    public void updateUserProfile(UpdateProfileRequestDto request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Member member = memberRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (request.nickname() != null && !request.nickname().equals(member.getNickname())) {
+            if (isNicknameDuplicated(request.nickname())) throw new IllegalArgumentException("Nickname already in use");
+            member.setNickname(request.nickname());
+        }
+        if (request.password() != null) member.setPassword(passwordEncoder.encode(request.password()));
+        if (request.age() != null) member.setAge(request.age());
+        if (request.gender() != null) member.setGender(request.gender());
+        if (request.profileImgPath() != null) member.setProfileImgPath(request.profileImgPath());
     }
 }

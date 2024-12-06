@@ -20,6 +20,10 @@ public record BaseResponseDto<T>(
         return new BaseResponseDto<>(0, null, new Meta(message));
     }
 
+    public static BaseResponseDto<Void> emptySuccess(String message) {
+        return new BaseResponseDto<>(1, null, new Meta(message));
+    }
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record Meta(
             String message,

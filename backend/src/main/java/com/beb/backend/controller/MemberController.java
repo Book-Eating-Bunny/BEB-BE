@@ -144,4 +144,18 @@ public class MemberController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    /**
+     * 현재 인증된 사용자의 프로필 정보를 입력 받은 정보로 수정. 입력된 항목만 수정한다.
+     * @param request (UpdateProfileRequestDto)
+     */
+    @PutMapping("/me")
+    public ResponseEntity<BaseResponseDto<Void>> updateUserProfile(@RequestBody @Valid UpdateProfileRequestDto request) {
+        try {
+            memberService.updateUserProfile(request);
+            return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("프로필 수정 성공"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponseDto.fail(e.getMessage()));
+        }
+    }
 }
