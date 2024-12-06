@@ -5,6 +5,7 @@ import com.beb.backend.dto.*;
 import com.beb.backend.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -120,6 +121,26 @@ public class MemberController {
         } catch (Exception e) {
             BaseResponseDto<TokenResponseDto> response = BaseResponseDto.fail(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * 헤더에 입력된 리프레시 토큰의 유효성을 확인하여 액세스 토큰과 리프레시 토큰을 재발급
+     * @param refreshToken (String) 리프레시 토큰
+     */
+    @PostMapping("/reissue")
+    public ResponseEntity<BaseResponseDto<TokenResponseDto>> reissueJwt(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION) String refreshToken) {
+
+        try {
+            TokenResponseDto tokenResponse = memberService.reissueJwt(refreshToken);
+            return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.success(
+                    tokenResponse, new BaseResponseDto.Meta("토큰 재발급 성공")
+            ));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponseDto.fail(e.getMessage()));
         }
     }
 

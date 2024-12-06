@@ -1,10 +1,12 @@
 package com.beb.backend.service;
 
 import com.beb.backend.auth.BebAuthenticationProvider;
-import com.beb.backend.auth.JwtGenerator;
+import com.beb.backend.auth.JwtUtils;
 import com.beb.backend.domain.Member;
+import com.beb.backend.domain.RefreshToken;
 import com.beb.backend.dto.*;
 import com.beb.backend.repository.MemberRepository;
+import com.beb.backend.repository.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,13 +24,15 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final JwtGenerator jwtGenerator;
+    private final JwtUtils jwtUtils;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     /**
      * 입력된 회원 정보로 회원을 생성하고 액세스 토큰과 리프레시 토큰 반환
      * @param request (MemberSignUpRequestDto)
      * @return (TokenResponseDto)
      */
+    @Transactional
     public TokenResponseDto signUp(SignUpRequestDto request) {
         if (isEmailDuplicated(request.email())) throw new IllegalArgumentException("Email already in use");
         if (isNicknameDuplicated(request.nickname())) throw new IllegalArgumentException("Nickname already in use");
@@ -44,9 +48,10 @@ public class MemberService {
                 .profileImgPath(request.profileImgPath()).build();
         // 회원 저장
         Member savedMember = memberRepository.save(member);
-        // 토큰 발급. TODO: Refresh token 저장
-        String accessToken = jwtGenerator.createAccessToken(savedMember.getEmail());
-        String refreshToken = jwtGenerator.createRefreshToken(savedMember.getEmail());
+        // 토큰 발급
+        String accessToken = jwtUtils.createAccessToken(savedMember.getEmail());
+        String refreshToken = jwtUtils.createRefreshToken(savedMember.getEmail());
+        refreshTokenRepository.save(new RefreshToken(savedMember.getEmail(), refreshToken));
         return new TokenResponseDto(accessToken, refreshToken);
     }
 
@@ -76,19 +81,47 @@ public class MemberService {
      *
      * @see com.beb.backend.config.SecurityConfig
      * @see BebAuthenticationProvider
-     * @see JwtGenerator
+     * @see JwtUtils
      */
+    @Transactional
     public TokenResponseDto login(LoginRequestDto request) {
         // 1. 인증 객체 생성 & Spring Security 인증 작업 수동 호출
         Authentication authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(request.email(), request.password())
         );
 
-        // 인증 실패하면 예외 발생시키게 되어 있어, authentication이 null로 나오는 경우는 없음
         // 2. 인증 완료 시 JWT 생성
-        String accessToken = jwtGenerator.createAccessToken(authentication.getName());
-        String refreshToken = jwtGenerator.createRefreshToken(authentication.getName());
+        String accessToken = jwtUtils.createAccessToken(authentication.getName());
+        String refreshToken = jwtUtils.createRefreshToken(authentication.getName());
+
+        // 3. 리프레시 토큰 업데이트
+        refreshTokenRepository.deleteByUsername(authentication.getName());
+        refreshTokenRepository.save(new RefreshToken(authentication.getName(), refreshToken));
         return new TokenResponseDto(accessToken, refreshToken);
+    }
+
+    /**
+     * 입력된 리프레시 토큰의 유효성을 확인하여 액세스 토큰과 리프레시 토큰을 재발급
+     * @param refreshToken (String)
+     * @return (TokenResponseDto)
+     */
+    @Transactional
+    public TokenResponseDto reissueJwt(String refreshToken) {
+        // 1. 리프레시 토큰 검증
+        if (!jwtUtils.validateToken(refreshToken)) throw new IllegalArgumentException("Invalid refresh token");
+
+        String username = jwtUtils.getUsernameFromToken(refreshToken);
+        RefreshToken storedToken = refreshTokenRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("로그아웃된 사용자"));
+
+        if (!refreshToken.equals(storedToken.getToken())) throw new RuntimeException("토큰의 유저 정보 불일치");
+
+        // 2. 토큰 재발급
+        String newAccessToken = jwtUtils.createAccessToken(username);
+        String newRefreshToken = jwtUtils.createRefreshToken(username);
+        // 3. 리프레시 토큰 업데이트
+        storedToken.setToken(newAccessToken);
+        return new TokenResponseDto(newAccessToken, newRefreshToken);
     }
 
     /**
