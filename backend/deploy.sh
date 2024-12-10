@@ -2,9 +2,7 @@ cp /home/chaeryeon0402/application.yml /var/lib/jenkins/workspace/backend-pipeli
 
 cd /var/lib/jenkins/workspace/backend-pipeline/backend
 
-./gradlew clean build
-
-pwd
+sudo ./gradlew clean build
 
 # 빌드 성공 여부 확인
 if [ $? -ne 0 ]; then
