@@ -2,7 +2,9 @@ cp /home/chaeryeon0402/application.yml /var/lib/jenkins/workspace/backend-pipeli
 
 cd /var/lib/jenkins/workspace/backend-pipeline/backend
 
-sudo ./gradlew clean build
+l
+
+./gradlew clean build
 
 # 빌드 성공 여부 확인
 if [ $? -ne 0 ]; then
@@ -14,7 +16,7 @@ fi
 PID=$(ps -ef | grep '[j]ava -jar' | grep -v grep | awk '{print $2}')
 if [ -n "$PID" ]; then
   echo "기존 애플리케이션 종료 중 (PID: $PID)"
-  kill -9 $PID
+  sudo kill -9 $PID
 else
   echo "!!!!!!!!!!!!!!!!No running server found!!!!!!!!!!!!!!!!!!"
 fi
