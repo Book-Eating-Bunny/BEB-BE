@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Book {
-    // TODO: updatedAt 추가해서 갱신 날짜 저장
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "book_id")
@@ -45,8 +44,9 @@ public class Book {
     @Column(name = "isbn", unique = true)
     private String isbn;
 
-    @Column(name = "category")
-    private String category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @Min(value = 0) @Max(value = 5)
     @Column(name = "average_rating")
@@ -58,13 +58,17 @@ public class Book {
     private LocalDateTime createdAt;
 
     @NotNull
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @NotNull
     @Column(name = "review_count", nullable = false)
     private int reviewCount;
 
     @Builder
     public Book(String title, String author, String coverImgUrl,
             String publisher, LocalDate publishedDate,
-            String isbn, String category) {
+            String isbn, Category category) {
         this.title = title;
         this.author = author;
         this.coverImgUrl = coverImgUrl;
@@ -72,6 +76,26 @@ public class Book {
         this.publishedDate = publishedDate;
         this.isbn = isbn;
         this.category = category;
+
+        this.updatedAt = LocalDateTime.now();
         this.reviewCount = 0;
+    }
+
+    public void updateBookInfo(String title, String author, String coverImgUrl,
+                               String publisher, LocalDate publishedDate,
+                               String isbn, Category category) {
+        this.title = title;
+        this.author = author;
+        this.coverImgUrl = coverImgUrl;
+        this.publisher = publisher;
+        this.publishedDate = publishedDate;
+        this.isbn = isbn;
+        this.category = category;
+
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void incrementReviewCount() {
+        this.reviewCount++;
     }
 }
