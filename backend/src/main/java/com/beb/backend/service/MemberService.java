@@ -17,6 +17,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class MemberService {
@@ -95,8 +97,10 @@ public class MemberService {
         String refreshToken = jwtUtils.createRefreshToken(authentication.getName());
 
         // 3. 리프레시 토큰 업데이트
-        refreshTokenRepository.deleteByUsername(authentication.getName());
-        refreshTokenRepository.save(new RefreshToken(authentication.getName(), refreshToken));
+        Optional<RefreshToken> existingToken = refreshTokenRepository.findByUsername(authentication.getName());
+        existingToken.ifPresentOrElse(
+                token -> token.setToken(refreshToken),
+                () -> refreshTokenRepository.save(new RefreshToken(authentication.getName(), refreshToken)));
         return new TokenResponseDto(accessToken, refreshToken);
     }
 
