@@ -2,7 +2,7 @@ cp /home/chaeryeon0402/application.yml /var/lib/jenkins/workspace/backend-pipeli
 
 cd /var/lib/jenkins/workspace/backend-pipeline/backend
 
-l
+sudo chmod +x ./gradlew
 
 ./gradlew clean build
 
