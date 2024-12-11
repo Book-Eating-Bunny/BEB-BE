@@ -10,4 +10,6 @@ import java.util.List;
 public interface ReadBookRepository extends CrudRepository<ReadBook, Long> {
     List<ReadBook> findByMember(Member member);
     List<ReadBook> findByBook(Book book);
+
+    boolean existsByMemberAndBook(Member member, Book book);
 }
