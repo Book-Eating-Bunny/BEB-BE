@@ -98,4 +98,8 @@ public class Book {
     public void incrementReviewCount() {
         this.reviewCount++;
     }
+
+    public void decrementReviewCount() {
+        this.reviewCount--;
+    }
 }
