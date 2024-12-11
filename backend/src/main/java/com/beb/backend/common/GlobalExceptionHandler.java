@@ -30,9 +30,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
     }
 
-    @ExceptionHandler(ReadBookException.class)
-    public ResponseEntity<BaseResponseDto<Void>> handleReadBookExceptions(ReadBookException e) {
-        ReadBookExceptionInfo info = e.getInfo();
+    @ExceptionHandler(BookLogException.class)
+    public ResponseEntity<BaseResponseDto<Void>> handleReadBookExceptions(BookLogException e) {
+        BookLogExceptionInfo info = e.getInfo();
         return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
     }
 
