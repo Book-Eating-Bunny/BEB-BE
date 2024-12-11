@@ -39,4 +39,12 @@ public class BookLogService {
                 .readAt(request.readAt()).build();
         readBookRepository.save(readBook);
     }
+
+    @Transactional
+    public void deleteBookFromReadBook(Long readBookId) {
+        if (!readBookRepository.existsById(readBookId)) {
+            throw new ReadBookException(ReadBookExceptionInfo.READ_BOOK_NOT_FOUND);
+        }
+        readBookRepository.deleteById(readBookId);
+    }
 }
