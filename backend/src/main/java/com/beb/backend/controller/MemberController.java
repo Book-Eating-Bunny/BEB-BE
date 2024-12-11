@@ -2,6 +2,7 @@ package com.beb.backend.controller;
 
 import com.beb.backend.common.ValidationRegexConstants;
 import com.beb.backend.dto.*;
+import com.beb.backend.exception.MemberException;
 import com.beb.backend.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -184,6 +185,8 @@ public class MemberController {
         try {
             memberService.updateUserProfile(request);
             return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("프로필 수정 성공"));
+        } catch (MemberException e) {
+            return ResponseEntity.status(e.getInfo().getStatus()).body(BaseResponseDto.fail(e.getInfo().getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponseDto.fail(e.getMessage()));
         }

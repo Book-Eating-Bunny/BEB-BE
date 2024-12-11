@@ -5,6 +5,8 @@ import com.beb.backend.auth.JwtUtils;
 import com.beb.backend.domain.Member;
 import com.beb.backend.domain.RefreshToken;
 import com.beb.backend.dto.*;
+import com.beb.backend.exception.MemberException;
+import com.beb.backend.exception.MemberExceptionInfo;
 import com.beb.backend.repository.MemberRepository;
 import com.beb.backend.repository.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
@@ -156,9 +158,7 @@ public class MemberService {
      */
     @Transactional
     public void updateUserProfile(UpdateProfileRequestDto request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Member member = memberRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        Member member = getCurrentMember();
 
         if (request.nickname() != null && !request.nickname().equals(member.getNickname())) {
             if (isNicknameDuplicated(request.nickname())) throw new IllegalArgumentException("Nickname already in use");
@@ -168,5 +168,11 @@ public class MemberService {
         if (request.age() != null) member.setAge(request.age());
         if (request.gender() != null) member.setGender(request.gender());
         if (request.profileImgPath() != null) member.setProfileImgPath(request.profileImgPath());
+    }
+
+    public Member getCurrentMember() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return memberRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
     }
 }
