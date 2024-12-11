@@ -33,4 +33,11 @@ public class BookLogController {
         bookLogService.addBookToWishlistBook(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponseDto.emptySuccess("찜한 책 추가 성공"));
     }
+
+    @DeleteMapping("/want-to-read-books/{wishlistBookId}")
+    public ResponseEntity<BaseResponseDto<Void>> deleteBookFromWishlistBook(
+            @PathVariable @Min(value = 1) Long wishlistBookId) {
+        bookLogService.deleteBookFromWishlistBook(wishlistBookId);
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("찜한 책 삭제 성공"));
+    }
 }

@@ -67,4 +67,12 @@ public class BookLogService {
                 .book(book.get()).build();
         wishlistBookRepository.save(wishlistBook);
     }
+
+    @Transactional
+    public void deleteBookFromWishlistBook(Long wishlistBookId) {
+        if (!wishlistBookRepository.existsById(wishlistBookId)) {
+            throw new BookLogException(BookLogExceptionInfo.WISHLIST_BOOK_NOT_FOUND);
+        }
+        wishlistBookRepository.deleteById(wishlistBookId);
+    }
 }
