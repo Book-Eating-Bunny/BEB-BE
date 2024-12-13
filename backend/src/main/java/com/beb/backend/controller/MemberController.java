@@ -1,6 +1,7 @@
 package com.beb.backend.controller;
 
 import com.beb.backend.common.ValidationRegexConstants;
+import com.beb.backend.domain.Member;
 import com.beb.backend.dto.*;
 import com.beb.backend.exception.MemberException;
 import com.beb.backend.service.MemberService;
@@ -155,25 +156,15 @@ public class MemberController {
     }
 
     /**
-     * 현재 인증된 사용자의 프로필(닉네임, 프로필 사진) 정보 반환
+     * 현재 인증된 사용자의 프로필 정보(비밀번호 제외) 반환
      */
     @GetMapping("/me")
     public ResponseEntity<BaseResponseDto<ProfileResponseDto>> getCurrentUserProfile() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail("인증 실패"));
-        }
-
-        try {
-            ProfileResponseDto profile = memberService.getUserProfileByEmail(authentication.getName());
-            BaseResponseDto<ProfileResponseDto> response = BaseResponseDto.success(
-                    profile, new BaseResponseDto.Meta("프로필 조회 성공")
-            );
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (Exception e) {
-            BaseResponseDto<ProfileResponseDto> response = BaseResponseDto.fail(e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+        Member member = memberService.getCurrentMember();
+        ProfileResponseDto profile = memberService.getUserProfileById(member.getId());
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.success(
+                profile, new BaseResponseDto.Meta("프로필 조회 성공")
+        ));
     }
 
     /**

@@ -142,14 +142,19 @@ public class MemberService {
     }
 
     /**
-     * 입력된 email로 DB에 저장된 회원을 찾아 그 프로필 (닉네임, 프로필 사진) 정보 반환
-     * @param email (String) 이메일
+     * 입력된 id(member_id)로 DB에 저장된 회원을 찾아 그 프로필 정보 (비밀번호 제외) 반환
+     * @param id (Long) 회원 PK
      * @return (ProfileResponseDto)
      */
-    public ProfileResponseDto getUserProfileByEmail(String email) {
-        return memberRepository.findByEmail(email)
-                .map(member -> new ProfileResponseDto(member.getNickname(), member.getProfileImgPath()))
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public ProfileResponseDto getUserProfileById(Long id) {
+        return memberRepository.findById(id)
+                .map(member -> new ProfileResponseDto(
+                        member.getEmail(),
+                        member.getNickname(),
+                        member.getAge(),
+                        member.getGender(),
+                        member.getProfileImgPath()))
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
     }
 
     /**
