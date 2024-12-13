@@ -1,3 +1,10 @@
 package com.beb.backend.dto;
 
-public record ProfileResponseDto(String nickname, String profileImgPath) { }
+import com.beb.backend.domain.Member;
+
+public record ProfileResponseDto(
+        String email,
+        String nickname,
+        Integer age,
+        Member.Gender gender,
+        String profileImgPath) { }

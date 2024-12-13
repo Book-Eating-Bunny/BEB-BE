@@ -2,8 +2,10 @@ package com.beb.backend.common;
 
 import com.beb.backend.dto.BaseResponseDto;
 import com.beb.backend.exception.*;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -34,6 +36,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<BaseResponseDto<Void>> handleReadBookExceptions(BookLogException e) {
         BookLogExceptionInfo info = e.getInfo();
         return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<BaseResponseDto<Void>> handleBadCredentialsExceptions(BadCredentialsException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail("인증 실패"));
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<BaseResponseDto<Void>> handleExpiredJwtExceptions(ExpiredJwtException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail("만료된 토큰"));
     }
 
     @ExceptionHandler(Exception.class)

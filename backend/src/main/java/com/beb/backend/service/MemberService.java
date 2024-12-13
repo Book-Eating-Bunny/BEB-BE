@@ -15,7 +15,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,8 +37,8 @@ public class MemberService {
      */
     @Transactional
     public TokenResponseDto signUp(SignUpRequestDto request) {
-        if (isEmailDuplicated(request.email())) throw new IllegalArgumentException("Email already in use");
-        if (isNicknameDuplicated(request.nickname())) throw new IllegalArgumentException("Nickname already in use");
+        if (isEmailDuplicated(request.email())) throw new MemberException(MemberExceptionInfo.DUPLICATE_EMAIL);
+        if (isNicknameDuplicated(request.nickname())) throw new MemberException(MemberExceptionInfo.DUPLICATE_NICKNAME);
 
         String encodedPassword = passwordEncoder.encode(request.password());
         // 회원 생성
@@ -142,14 +141,19 @@ public class MemberService {
     }
 
     /**
-     * 입력된 email로 DB에 저장된 회원을 찾아 그 프로필 (닉네임, 프로필 사진) 정보 반환
-     * @param email (String) 이메일
+     * 입력된 id(member_id)로 DB에 저장된 회원을 찾아 그 프로필 정보 (비밀번호 제외) 반환
+     * @param id (Long) 회원 PK
      * @return (ProfileResponseDto)
      */
-    public ProfileResponseDto getUserProfileByEmail(String email) {
-        return memberRepository.findByEmail(email)
-                .map(member -> new ProfileResponseDto(member.getNickname(), member.getProfileImgPath()))
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public ProfileResponseDto getUserProfileById(Long id) {
+        return memberRepository.findById(id)
+                .map(member -> new ProfileResponseDto(
+                        member.getEmail(),
+                        member.getNickname(),
+                        member.getAge(),
+                        member.getGender(),
+                        member.getProfileImgPath()))
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
     }
 
     /**
@@ -161,7 +165,9 @@ public class MemberService {
         Member member = getCurrentMember();
 
         if (request.nickname() != null && !request.nickname().equals(member.getNickname())) {
-            if (isNicknameDuplicated(request.nickname())) throw new IllegalArgumentException("Nickname already in use");
+            if (isNicknameDuplicated(request.nickname())) {
+                throw new MemberException(MemberExceptionInfo.DUPLICATE_NICKNAME);
+            }
             member.setNickname(request.nickname());
         }
         if (request.password() != null) member.setPassword(passwordEncoder.encode(request.password()));
