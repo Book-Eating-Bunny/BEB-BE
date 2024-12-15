@@ -103,4 +103,25 @@ public class BookLogService {
 
         return BaseResponseDto.success(new ReviewsResponseDto<CurrentUserReviewDto>(reviews), meta);
     }
+
+    @Transactional
+    public CreateReviewResponseDto createReview(CreateReviewRequestDto request) {
+        Member member = memberService.getCurrentMember();
+        Book book = bookRepository.findById(request.bookId())
+                .orElseThrow(() -> new BookException(BookExceptionInfo.BOOK_NOT_FOUND));
+
+        Comment savedReview = commentRepository.save(Comment.createReview(
+                book, member,
+                request.content(),
+                request.rating(),
+                request.isSpoiler(),
+                request.isPublic()
+        ));
+        book.incrementReviewCount();
+
+        if (!readBookRepository.existsByMemberAndBook(member, book)) {
+            readBookRepository.save(ReadBook.builder().book(book).member(member).build());
+        }
+        return new CreateReviewResponseDto(savedReview.getId());
+    }
 }
