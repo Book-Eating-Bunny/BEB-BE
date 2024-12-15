@@ -84,6 +84,7 @@ public class BookLogService {
                 .map(review -> new CurrentUserReviewDto(
                         review.getId(),
                         new BookSummaryDto(
+                                review.getBook().getId(),
                                 review.getBook().getCoverImgUrl(),
                                 review.getBook().getTitle(),
                                 review.getBook().getAuthor()
