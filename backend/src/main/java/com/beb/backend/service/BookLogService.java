@@ -1,22 +1,22 @@
 package com.beb.backend.service;
 
-import com.beb.backend.domain.Book;
-import com.beb.backend.domain.Member;
-import com.beb.backend.domain.ReadBook;
-import com.beb.backend.domain.WishlistBook;
-import com.beb.backend.dto.AddReadBookRequestDto;
-import com.beb.backend.dto.AddWishlistBookRequestDto;
+import com.beb.backend.domain.*;
+import com.beb.backend.dto.*;
 import com.beb.backend.exception.BookException;
 import com.beb.backend.exception.BookExceptionInfo;
 import com.beb.backend.exception.BookLogException;
 import com.beb.backend.exception.BookLogExceptionInfo;
 import com.beb.backend.repository.BookRepository;
+import com.beb.backend.repository.CommentRepository;
 import com.beb.backend.repository.ReadBookRepository;
 import com.beb.backend.repository.WishlistBookRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,6 +26,7 @@ public class BookLogService {
     private final BookRepository bookRepository;
     private final ReadBookRepository readBookRepository;
     private final WishlistBookRepository wishlistBookRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional
     public void addBookToReadBook(AddReadBookRequestDto request) {
@@ -74,5 +75,31 @@ public class BookLogService {
             throw new BookLogException(BookLogExceptionInfo.WISHLIST_BOOK_NOT_FOUND);
         }
         wishlistBookRepository.deleteById(wishlistBookId);
+    }
+
+    public BaseResponseDto<ReviewsResponseDto<CurrentUserReviewDto>> getUserReviewsById(Long memberId, Pageable pageable) {
+        Page<Comment> reviewsPage = commentRepository.findReviewsByMemberId(memberId, pageable);
+
+        List<CurrentUserReviewDto> reviews = reviewsPage.getContent().stream()
+                .map(review -> new CurrentUserReviewDto(
+                        review.getId(),
+                        new BookSummaryDto(
+                                review.getBook().getCoverImgUrl(),
+                                review.getBook().getTitle(),
+                                review.getBook().getAuthor()
+                        ),
+                        review.getRating(),
+                        review.getContent(),
+                        review.getCreatedAt(),
+                        review.getUpdatedAt()
+                )).toList();
+
+        BaseResponseDto.Meta meta = new BaseResponseDto.Meta(
+                "조회 성공",
+                reviewsPage.getNumber(),
+                reviewsPage.getTotalPages(),
+                reviewsPage.getTotalElements());
+
+        return BaseResponseDto.success(new ReviewsResponseDto<CurrentUserReviewDto>(reviews), meta);
     }
 }
