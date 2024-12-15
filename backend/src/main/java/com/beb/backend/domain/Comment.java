@@ -2,10 +2,7 @@ package com.beb.backend.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -25,11 +22,11 @@ public class Comment {
 
     @ManyToOne
     @JoinColumn(name = "parent_id")
-    private Comment parentComment;
+    private Comment parentComment;      // 리뷰면 null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id")
-    private Book book;
+    private Book book;                  // 댓글이면 null
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
@@ -42,16 +39,16 @@ public class Comment {
     private String content;
 
     @Column(name = "rating")
-    private Integer rating;
+    private Integer rating;             // 댓글이면 null
 
     @Column(name = "is_spoiler")
-    private Boolean isSpoiler;
+    private Boolean isSpoiler;          // 댓글이면 null
 
     @Column(name = "is_public")
-    private Boolean isPublic;
+    private Boolean isPublic;           // 댓글이면 null
 
     @Column(name = "like_count")
-    private Integer likeCount;
+    private Integer likeCount;          // 댓글이면 null
 
     @NotNull
     @CreatedDate
@@ -61,4 +58,35 @@ public class Comment {
     @NotNull
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public Comment(Comment parentComment, Book book, Member member,
+                   String content, Integer rating, Boolean isSpoiler, Boolean isPublic, Integer likeCount) {
+        this.parentComment = parentComment;
+        this.book = book;
+        this.member = member;
+        this.content = content;
+        this.rating = rating;
+        this.isSpoiler = isSpoiler;
+        this.isPublic = isPublic;
+        this.likeCount = likeCount;
+
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public static Comment createReview(Book book, Member member,
+                                       String content, Integer rating, Boolean isSpoiler, Boolean isPublic) {
+        return new Comment(null, book, member, content, rating, isSpoiler, isPublic, 0);
+    }
+
+    public static Comment createComment(Comment review, Member member, String content) {
+        return new Comment(review, null, member, content, null, null, null, null);
+    }
+
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decrementLikeCount() {
+        this.likeCount--;
+    }
 }
