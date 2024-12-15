@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,10 +17,6 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-
-import java.util.Collections;
 
 @Configuration
 @RequiredArgsConstructor
@@ -36,9 +33,11 @@ public class SecurityConfig {
                         .requestMatchers("/error",
                                 "/api/v1/users/signup",
                                 "/api/v1/users/login",
-                                "/api/v1/users/reissue",
+                                "/api/v1/users/reissue").permitAll()
+                        .requestMatchers(HttpMethod.GET,
                                 "/api/v1/users/email-availability",
-                                "/api/v1/users/nickname-availability").permitAll()
+                                "/api/v1/users/nickname-availability",
+                                "/api/v1/reviews/{reviewId:\\d+}").permitAll()
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

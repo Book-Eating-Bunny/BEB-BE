@@ -2,10 +2,7 @@ package com.beb.backend.service;
 
 import com.beb.backend.domain.*;
 import com.beb.backend.dto.*;
-import com.beb.backend.exception.BookException;
-import com.beb.backend.exception.BookExceptionInfo;
-import com.beb.backend.exception.BookLogException;
-import com.beb.backend.exception.BookLogExceptionInfo;
+import com.beb.backend.exception.*;
 import com.beb.backend.repository.BookRepository;
 import com.beb.backend.repository.CommentRepository;
 import com.beb.backend.repository.ReadBookRepository;
@@ -77,6 +74,7 @@ public class BookLogService {
         wishlistBookRepository.deleteById(wishlistBookId);
     }
 
+    @Transactional
     public BaseResponseDto<ReviewsResponseDto<CurrentUserReviewDto>> getUserReviewsById(Long memberId, Pageable pageable) {
         Page<Comment> reviewsPage = commentRepository.findReviewsByMemberId(memberId, pageable);
 
@@ -123,5 +121,41 @@ public class BookLogService {
             readBookRepository.save(ReadBook.builder().book(book).member(member).build());
         }
         return new CreateReviewResponseDto(savedReview.getId());
+    }
+
+    @Transactional
+    public ReviewDetailsResponseDto getReviewDetails(Long reviewId) {
+        Comment review = commentRepository.findById(reviewId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
+
+        if (!review.getIsPublic()) {
+            try {
+                Member member = memberService.getCurrentMember();
+                if (!member.getId().equals(review.getMember().getId())) {
+                    throw new BookLogException(BookLogExceptionInfo.FORBIDDEN_REVIEW);
+                }
+            } catch (MemberException e) {
+                throw new BookLogException(BookLogExceptionInfo.FORBIDDEN_REVIEW);
+            }
+        }
+
+        return new ReviewDetailsResponseDto(
+                review.getId(),
+                new BookSummaryDto(
+                        review.getBook().getId(),
+                        review.getBook().getCoverImgUrl(),
+                        review.getBook().getTitle(),
+                        review.getBook().getAuthor()
+                ),
+                new MemberSummaryDto(
+                        review.getMember().getId(),
+                        review.getMember().getNickname()
+                ),
+                review.getRating(),
+                review.getContent(),
+                review.getIsSpoiler(),
+                review.getCreatedAt(),
+                review.getUpdatedAt()
+        );
     }
 }

@@ -66,4 +66,13 @@ public class BookLogController {
                 BaseResponseDto.success(response, new BaseResponseDto.Meta("리뷰 생성 성공"))
         );
     }
+
+    @GetMapping("/reviews/{reviewId}")
+    public ResponseEntity<BaseResponseDto<ReviewDetailsResponseDto>>
+    getReviewDetails(@PathVariable @Min(value = 1) Long reviewId) {
+        return ResponseEntity.status(HttpStatus.OK).body(
+                BaseResponseDto.success(bookLogService.getReviewDetails(reviewId),
+                        new BaseResponseDto.Meta("조회 성공"))
+        );
+    }
 }
