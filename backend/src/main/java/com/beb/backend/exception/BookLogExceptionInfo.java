@@ -9,8 +9,9 @@ public enum BookLogExceptionInfo {
     READ_BOOK_NOT_FOUND(HttpStatus.NOT_FOUND, "읽은 책 목록에 해당 도서가 존재하지 않음"),
     DUPLICATE_WISHLIST_BOOK(HttpStatus.BAD_REQUEST, "이미 찜한 책에 저장된 정보"),
     WISHLIST_BOOK_NOT_FOUND(HttpStatus.NOT_FOUND, "찜한 책 목록에 해당 도서가 존재하지 않음"),
-    FORBIDDEN_REVIEW(HttpStatus.FORBIDDEN, "비공개 설정된 리뷰"),
-    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 리뷰가 존재하지 않음");
+    REVIEW_NOT_PUBLIC(HttpStatus.FORBIDDEN, "비공개 설정된 리뷰"),
+    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 리뷰가 존재하지 않음"),
+    REVIEW_FORBIDDEN(HttpStatus.FORBIDDEN, "리뷰에 대한 권한 없음");
 
     private final HttpStatus status;
     private final String message;
