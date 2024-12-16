@@ -1,22 +1,20 @@
 package com.beb.backend.service;
 
-import com.beb.backend.domain.Book;
-import com.beb.backend.domain.Member;
-import com.beb.backend.domain.ReadBook;
-import com.beb.backend.domain.WishlistBook;
-import com.beb.backend.dto.AddReadBookRequestDto;
-import com.beb.backend.dto.AddWishlistBookRequestDto;
-import com.beb.backend.exception.BookException;
-import com.beb.backend.exception.BookExceptionInfo;
-import com.beb.backend.exception.BookLogException;
-import com.beb.backend.exception.BookLogExceptionInfo;
+import com.beb.backend.domain.*;
+import com.beb.backend.dto.*;
+import com.beb.backend.exception.*;
 import com.beb.backend.repository.BookRepository;
+import com.beb.backend.repository.CommentRepository;
 import com.beb.backend.repository.ReadBookRepository;
 import com.beb.backend.repository.WishlistBookRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,6 +24,7 @@ public class BookLogService {
     private final BookRepository bookRepository;
     private final ReadBookRepository readBookRepository;
     private final WishlistBookRepository wishlistBookRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional
     public void addBookToReadBook(AddReadBookRequestDto request) {
@@ -74,5 +73,120 @@ public class BookLogService {
             throw new BookLogException(BookLogExceptionInfo.WISHLIST_BOOK_NOT_FOUND);
         }
         wishlistBookRepository.deleteById(wishlistBookId);
+    }
+
+    @Transactional
+    public BaseResponseDto<ReviewsResponseDto<CurrentUserReviewDto>> getUserReviewsById(Long memberId, Pageable pageable) {
+        Page<Comment> reviewsPage = commentRepository.findReviewsByMemberId(memberId, pageable);
+
+        List<CurrentUserReviewDto> reviews = reviewsPage.getContent().stream()
+                .map(review -> new CurrentUserReviewDto(
+                        review.getId(),
+                        new BookSummaryDto(
+                                review.getBook().getId(),
+                                review.getBook().getCoverImgUrl(),
+                                review.getBook().getTitle(),
+                                review.getBook().getAuthor()
+                        ),
+                        review.getRating(),
+                        review.getContent(),
+                        review.getCreatedAt(),
+                        review.getUpdatedAt()
+                )).toList();
+
+        BaseResponseDto.Meta meta = new BaseResponseDto.Meta(
+                "조회 성공",
+                reviewsPage.getNumber() + 1,
+                reviewsPage.getTotalPages(),
+                reviewsPage.getTotalElements());
+
+        return BaseResponseDto.success(new ReviewsResponseDto<CurrentUserReviewDto>(reviews), meta);
+    }
+
+    @Transactional
+    public CreateReviewResponseDto createReview(CreateReviewRequestDto request) {
+        Member member = memberService.getCurrentMember();
+        Book book = bookRepository.findById(request.bookId())
+                .orElseThrow(() -> new BookException(BookExceptionInfo.BOOK_NOT_FOUND));
+
+        Comment savedReview = commentRepository.save(Comment.createReview(
+                book, member,
+                request.content(),
+                request.rating(),
+                request.isSpoiler(),
+                request.isPublic()
+        ));
+        book.incrementReviewCount();
+
+        if (!readBookRepository.existsByMemberAndBook(member, book)) {
+            readBookRepository.save(ReadBook.builder().book(book).member(member).build());
+        }
+        return new CreateReviewResponseDto(savedReview.getId());
+    }
+
+    @Transactional
+    public ReviewDetailsResponseDto getReviewDetails(Long reviewId) {
+        Comment review = commentRepository.findById(reviewId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
+
+        if (!review.getIsPublic()) {
+            try {
+                Member member = memberService.getCurrentMember();
+                if (!member.getId().equals(review.getMember().getId())) {
+                    throw new BookLogException(BookLogExceptionInfo.REVIEW_NOT_PUBLIC);
+                }
+            } catch (MemberException e) {
+                throw new BookLogException(BookLogExceptionInfo.REVIEW_NOT_PUBLIC);
+            }
+        }
+
+        return new ReviewDetailsResponseDto(
+                review.getId(),
+                new BookSummaryDto(
+                        review.getBook().getId(),
+                        review.getBook().getCoverImgUrl(),
+                        review.getBook().getTitle(),
+                        review.getBook().getAuthor()
+                ),
+                new MemberSummaryDto(
+                        review.getMember().getId(),
+                        review.getMember().getNickname()
+                ),
+                review.getRating(),
+                review.getContent(),
+                review.getIsSpoiler(),
+                review.getCreatedAt(),
+                review.getUpdatedAt()
+        );
+    }
+
+    @Transactional
+    public void updateReview(Long reviewId, UpdateReviewRequestDto request) {
+        Comment review = commentRepository.findById(reviewId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
+        Member member = memberService.getCurrentMember();
+        if (!member.getId().equals(review.getMember().getId())) {
+            throw new BookLogException(BookLogExceptionInfo.REVIEW_FORBIDDEN);
+        }
+        if (request.rating() != null) review.setRating(request.rating());
+        if (request.content() != null) review.setContent(request.content());
+        if (request.isSpoiler() != null) review.setIsSpoiler(request.isSpoiler());
+        if (request.isPublic() != null) review.setIsPublic(request.isPublic());
+        review.setUpdatedAt(LocalDateTime.now());
+    }
+
+    @Transactional
+    public void deleteReview(Long reviewId) {
+        Comment review = commentRepository.findById(reviewId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
+        Member member = memberService.getCurrentMember();
+        if (!member.getId().equals(review.getMember().getId())) {
+            throw new BookLogException(BookLogExceptionInfo.REVIEW_FORBIDDEN);
+        }
+        Book book = bookRepository.findById(review.getBook().getId())
+                .orElseThrow(() -> new BookException(BookExceptionInfo.BOOK_NOT_FOUND));
+
+        commentRepository.delete(review);
+        book.decrementReviewCount();
     }
 }

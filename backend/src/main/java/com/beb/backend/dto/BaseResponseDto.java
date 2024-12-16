@@ -29,7 +29,7 @@ public record BaseResponseDto<T>(
             String message,
             Integer currentPage,
             Integer totalPages,
-            Integer totalElements
+            Long totalElements
     ) {
         public Meta(String message) {
             this(message, null, null, null);

@@ -3,6 +3,7 @@ package com.beb.backend.common;
 import com.beb.backend.dto.BaseResponseDto;
 import com.beb.backend.exception.*;
 import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,6 +17,12 @@ public class GlobalExceptionHandler {
     // 파라미터에서 @Valid로 검사했을 때 예외 발생 시
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<BaseResponseDto<Object>> handleValidationExceptions(MethodArgumentNotValidException e) {
+        BaseResponseDto<Object> response = BaseResponseDto.fail("잘못된 요청");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<BaseResponseDto<Object>> handleValidationExceptions(ConstraintViolationException e) {
         BaseResponseDto<Object> response = BaseResponseDto.fail("잘못된 요청");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
