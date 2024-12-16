@@ -174,4 +174,19 @@ public class BookLogService {
         if (request.isPublic() != null) review.setIsPublic(request.isPublic());
         review.setUpdatedAt(LocalDateTime.now());
     }
+
+    @Transactional
+    public void deleteReview(Long reviewId) {
+        Comment review = commentRepository.findById(reviewId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
+        Member member = memberService.getCurrentMember();
+        if (!member.getId().equals(review.getMember().getId())) {
+            throw new BookLogException(BookLogExceptionInfo.REVIEW_FORBIDDEN);
+        }
+        Book book = bookRepository.findById(review.getBook().getId())
+                .orElseThrow(() -> new BookException(BookExceptionInfo.BOOK_NOT_FOUND));
+
+        commentRepository.delete(review);
+        book.decrementReviewCount();
+    }
 }

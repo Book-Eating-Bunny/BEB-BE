@@ -87,4 +87,12 @@ public class BookLogController {
                 BaseResponseDto.emptySuccess("리뷰 수정 성공")
         );
     }
+
+    @DeleteMapping("/reviews/{reviewId}")
+    public ResponseEntity<BaseResponseDto<Void>> deleteReview(@PathVariable @Min(value = 1) Long reviewId) {
+        bookLogService.deleteReview(reviewId);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                BaseResponseDto.emptySuccess("리뷰 삭제 성공")
+        );
+    }
 }
