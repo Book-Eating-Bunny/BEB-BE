@@ -12,11 +12,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
+@Validated
 public class BookLogController {
     private final BookLogService bookLogService;
     private final MemberService memberService;
@@ -73,6 +75,16 @@ public class BookLogController {
         return ResponseEntity.status(HttpStatus.OK).body(
                 BaseResponseDto.success(bookLogService.getReviewDetails(reviewId),
                         new BaseResponseDto.Meta("조회 성공"))
+        );
+    }
+
+    @PutMapping("/reviews/{reviewId}")
+    public ResponseEntity<BaseResponseDto<Void>>
+    updateReview(@PathVariable @Min(value = 1) Long reviewId,
+                 @RequestBody @Valid UpdateReviewRequestDto request) {
+        bookLogService.updateReview(reviewId, request);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                BaseResponseDto.emptySuccess("리뷰 수정 성공")
         );
     }
 }

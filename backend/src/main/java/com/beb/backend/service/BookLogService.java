@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -132,10 +133,10 @@ public class BookLogService {
             try {
                 Member member = memberService.getCurrentMember();
                 if (!member.getId().equals(review.getMember().getId())) {
-                    throw new BookLogException(BookLogExceptionInfo.FORBIDDEN_REVIEW);
+                    throw new BookLogException(BookLogExceptionInfo.REVIEW_NOT_PUBLIC);
                 }
             } catch (MemberException e) {
-                throw new BookLogException(BookLogExceptionInfo.FORBIDDEN_REVIEW);
+                throw new BookLogException(BookLogExceptionInfo.REVIEW_NOT_PUBLIC);
             }
         }
 
@@ -157,5 +158,20 @@ public class BookLogService {
                 review.getCreatedAt(),
                 review.getUpdatedAt()
         );
+    }
+
+    @Transactional
+    public void updateReview(Long reviewId, UpdateReviewRequestDto request) {
+        Comment review = commentRepository.findById(reviewId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
+        Member member = memberService.getCurrentMember();
+        if (!member.getId().equals(review.getMember().getId())) {
+            throw new BookLogException(BookLogExceptionInfo.REVIEW_FORBIDDEN);
+        }
+        if (request.rating() != null) review.setRating(request.rating());
+        if (request.content() != null) review.setContent(request.content());
+        if (request.isSpoiler() != null) review.setIsSpoiler(request.isSpoiler());
+        if (request.isPublic() != null) review.setIsPublic(request.isPublic());
+        review.setUpdatedAt(LocalDateTime.now());
     }
 }
