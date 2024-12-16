@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record CurrentUserReviewDto(
         Long reviewId,
-        BookSummaryDto bookSummaryDto,
+        BookSummaryDto book,
         Integer rating,
         String content,
         LocalDateTime createdAt,

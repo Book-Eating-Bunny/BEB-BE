@@ -50,11 +50,10 @@ public class BookLogController {
 
     @GetMapping("/users/me/reviews")
     public ResponseEntity<BaseResponseDto<ReviewsResponseDto<CurrentUserReviewDto>>> getCurrentUserReviews(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "12") int size) {
+            @RequestParam(defaultValue = "1") @Min(value = 1) int page,
+            @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
         Member member = memberService.getCurrentMember();
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
         return ResponseEntity.status(HttpStatus.OK).body(
                 bookLogService.getUserReviewsById(member.getId(), pageable)
         );

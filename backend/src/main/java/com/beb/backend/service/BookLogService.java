@@ -96,7 +96,7 @@ public class BookLogService {
 
         BaseResponseDto.Meta meta = new BaseResponseDto.Meta(
                 "조회 성공",
-                reviewsPage.getNumber(),
+                reviewsPage.getNumber() + 1,
                 reviewsPage.getTotalPages(),
                 reviewsPage.getTotalElements());
 
