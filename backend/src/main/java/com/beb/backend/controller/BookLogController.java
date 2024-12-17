@@ -47,6 +47,18 @@ public class BookLogController {
         return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("읽은 책 삭제 성공"));
     }
 
+    @GetMapping("/users/me/want-to-read-books")
+    public ResponseEntity<BaseResponseDto<WishlistBooksResponseDto<CurrentUserWishlistBookDto>>>
+    getCurrentUserWishlistBooks(@RequestParam(defaultValue = "1") @Min(value = 1) int page,
+                                @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
+
+        Member member = memberService.getCurrentMember();
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        return ResponseEntity.status(HttpStatus.OK).body(
+                bookLogService.getUserWishlistBooksById(member, pageable)
+        );
+    }
+
     @PostMapping("/users/me/want-to-read-books")
     public ResponseEntity<BaseResponseDto<Void>> addBookToWishlistBook(@RequestBody AddWishlistBookRequestDto request) {
         bookLogService.addBookToWishlistBook(request);

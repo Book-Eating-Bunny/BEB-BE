@@ -13,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -81,6 +83,38 @@ public class BookLogService {
             throw new BookLogException(BookLogExceptionInfo.READ_BOOK_NOT_FOUND);
         }
         readBookRepository.deleteById(readBookId);
+    }
+
+    private CurrentUserWishlistBookDto mapToCurrentUserWishlistBookDto(WishlistBook wishlistBook) {
+        BigDecimal decimalRating = Optional.ofNullable(wishlistBook.getBook().getAverageRating())
+                .map(avg -> BigDecimal.valueOf(avg).setScale(1, RoundingMode.HALF_UP))
+                .orElse(null);
+
+        return new CurrentUserWishlistBookDto(
+                wishlistBook.getId(),
+                new BookSummaryWithRatingDto(
+                        wishlistBook.getBook().getId(),
+                        wishlistBook.getBook().getCoverImgUrl(),
+                        wishlistBook.getBook().getTitle(),
+                        wishlistBook.getBook().getAuthor(),
+                        decimalRating
+                ),
+                wishlistBook.getCreatedAt()
+        );
+    }
+
+    @Transactional
+    public BaseResponseDto<WishlistBooksResponseDto<CurrentUserWishlistBookDto>>
+    getUserWishlistBooksById(Member memberId, Pageable pageable) {
+
+        Page<WishlistBook> wishlistBookPage = wishlistBookRepository.findByMember(memberId, pageable);
+        List<CurrentUserWishlistBookDto> wishlistBooks = wishlistBookPage.getContent().stream()
+                .map(this::mapToCurrentUserWishlistBookDto).toList();
+
+        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
+                wishlistBookPage.getNumber(), wishlistBookPage.getTotalPages(), wishlistBookPage.getTotalElements(),
+                "조회 성공");
+        return BaseResponseDto.success(new WishlistBooksResponseDto<>(wishlistBooks), meta);
     }
 
     @Transactional
