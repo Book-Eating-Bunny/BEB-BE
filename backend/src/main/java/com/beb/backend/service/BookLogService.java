@@ -26,6 +26,38 @@ public class BookLogService {
     private final WishlistBookRepository wishlistBookRepository;
     private final CommentRepository commentRepository;
 
+
+    private CurrentUserReadBookDto mapToCurrentUserReadBookDto(ReadBook readBook) {
+        BigDecimal decimalRating = Optional.ofNullable(readBook.getBook().getAverageRating())
+                .map(avg -> BigDecimal.valueOf(avg).setScale(1, RoundingMode.HALF_UP))
+                .orElse(null);
+
+        return new CurrentUserReadBookDto(
+                readBook.getId(),
+                new BookSummaryWithRatingDto(
+                        readBook.getBook().getId(),
+                        readBook.getBook().getCoverImgUrl(),
+                        readBook.getBook().getTitle(),
+                        readBook.getBook().getAuthor(),
+                        decimalRating
+                ),
+                readBook.getReadAt(),
+                readBook.getCreatedAt()
+        );
+    }
+
+    @Transactional
+    public BaseResponseDto<ReadBooksResponseDto<CurrentUserReadBookDto>> getUserReadBooksById(Member memberId, Pageable pageable) {
+        Page<ReadBook> readBookPage = readBookRepository.findByMember(memberId, pageable);
+        List<CurrentUserReadBookDto> readBooks = readBookPage.getContent().stream()
+                .map(this::mapToCurrentUserReadBookDto).toList();
+
+        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
+                readBookPage.getNumber(), readBookPage.getTotalPages(), readBookPage.getTotalElements(),
+                "조회 성공");
+        return BaseResponseDto.success(new ReadBooksResponseDto<>(readBooks), meta);
+    }
+
     @Transactional
     public void addBookToReadBook(AddReadBookRequestDto request) {
         Optional<Book> book = bookRepository.findById(request.bookId());

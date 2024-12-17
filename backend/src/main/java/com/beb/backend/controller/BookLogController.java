@@ -23,6 +23,18 @@ public class BookLogController {
     private final BookLogService bookLogService;
     private final MemberService memberService;
 
+    @GetMapping("/users/me/read-books")
+    public ResponseEntity<BaseResponseDto<ReadBooksResponseDto<CurrentUserReadBookDto>>>
+    getCurrentUserReadBooks(@RequestParam(defaultValue = "1") @Min(value = 1) int page,
+                            @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
+
+        Member member = memberService.getCurrentMember();
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        return ResponseEntity.status(HttpStatus.OK).body(
+                bookLogService.getUserReadBooksById(member, pageable)
+        );
+    }
+
     @PostMapping("/users/me/read-books")
     public ResponseEntity<BaseResponseDto<Void>> addBookToReadBook(@RequestBody AddReadBookRequestDto request) {
         bookLogService.addBookToReadBook(request);

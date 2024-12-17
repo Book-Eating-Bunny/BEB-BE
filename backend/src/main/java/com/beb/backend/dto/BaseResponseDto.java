@@ -34,5 +34,14 @@ public record BaseResponseDto<T>(
         public Meta(String message) {
             this(message, null, null, null);
         }
+
+        public static Meta createPaginationMeta(int pageNumber, int totalPages, long totalElements, String message) {
+            return new Meta(
+                    message,
+                    pageNumber + 1,
+                    totalPages,
+                    totalElements
+            );
+        }
     }
 }
