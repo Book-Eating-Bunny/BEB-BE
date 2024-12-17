@@ -141,32 +141,32 @@ public class BookLogService {
         wishlistBookRepository.deleteById(wishlistBookId);
     }
 
+    private CurrentUserReviewDto mapToCurrentUserReviewDto(Comment review) {
+        return new CurrentUserReviewDto(
+                review.getId(),
+                new BookSummaryDto(
+                        review.getBook().getId(),
+                        review.getBook().getCoverImgUrl(),
+                        review.getBook().getTitle(),
+                        review.getBook().getAuthor()
+                ),
+                review.getRating(),
+                review.getContent(),
+                review.getCreatedAt(),
+                review.getUpdatedAt()
+        );
+    }
+
     @Transactional
     public BaseResponseDto<ReviewsResponseDto<CurrentUserReviewDto>> getUserReviewsById(Long memberId, Pageable pageable) {
         Page<Comment> reviewsPage = commentRepository.findReviewsByMemberId(memberId, pageable);
-
         List<CurrentUserReviewDto> reviews = reviewsPage.getContent().stream()
-                .map(review -> new CurrentUserReviewDto(
-                        review.getId(),
-                        new BookSummaryDto(
-                                review.getBook().getId(),
-                                review.getBook().getCoverImgUrl(),
-                                review.getBook().getTitle(),
-                                review.getBook().getAuthor()
-                        ),
-                        review.getRating(),
-                        review.getContent(),
-                        review.getCreatedAt(),
-                        review.getUpdatedAt()
-                )).toList();
+                .map(this::mapToCurrentUserReviewDto).toList();
 
-        BaseResponseDto.Meta meta = new BaseResponseDto.Meta(
-                "조회 성공",
-                reviewsPage.getNumber() + 1,
-                reviewsPage.getTotalPages(),
-                reviewsPage.getTotalElements());
-
-        return BaseResponseDto.success(new ReviewsResponseDto<CurrentUserReviewDto>(reviews), meta);
+        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
+                reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements(),
+                "조회 성공");
+        return BaseResponseDto.success(new ReviewsResponseDto<>(reviews), meta);
     }
 
     @Transactional
