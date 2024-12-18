@@ -7,6 +7,7 @@ import com.beb.backend.exception.MemberException;
 import com.beb.backend.exception.MemberExceptionInfo;
 import com.beb.backend.service.MemberService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -41,7 +42,8 @@ public class MemberController {
      * @param email (String) 확인할 이메일 주소
      */
     @GetMapping("/email-availability")
-    public ResponseEntity<BaseResponseDto<AvailabilityResponseDto>> checkEmailAvailability(@RequestParam String email) {
+    public ResponseEntity<BaseResponseDto<AvailabilityResponseDto>> checkEmailAvailability(
+            @RequestParam @NotBlank String email) {
         // email 형식 검사
         if (!email.matches(ValidationRegexConstants.EMAIL_REGEX)) {
             throw new MemberException(MemberExceptionInfo.EMAIL_NOT_VALID);
@@ -63,7 +65,8 @@ public class MemberController {
      * @param nickname (String) 확인할 닉네임
      */
     @GetMapping("/nickname-availability")
-    public ResponseEntity<BaseResponseDto<AvailabilityResponseDto>> checkNicknameAvailability(@RequestParam String nickname) {
+    public ResponseEntity<BaseResponseDto<AvailabilityResponseDto>> checkNicknameAvailability(
+            @RequestParam @NotBlank String nickname) {
         // nickname 형식 검사
         if (!nickname.matches(ValidationRegexConstants.NICKNAME_REGEX)) {
             throw new MemberException(MemberExceptionInfo.NICKNAME_NOT_VALID);
