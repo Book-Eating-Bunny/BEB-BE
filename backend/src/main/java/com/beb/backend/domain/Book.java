@@ -8,6 +8,8 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -101,5 +103,10 @@ public class Book {
 
     public void decrementReviewCount() {
         this.reviewCount--;
+    }
+
+    public BigDecimal getAverageRatingAsBigDecimal() {
+        return averageRating == null ? null :
+                BigDecimal.valueOf(averageRating).setScale(1, RoundingMode.HALF_UP);
     }
 }
