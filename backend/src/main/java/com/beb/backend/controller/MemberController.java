@@ -12,11 +12,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
+@Validated
 public class MemberController {
 
     private final MemberService memberService;
@@ -83,20 +85,12 @@ public class MemberController {
      * @param loginRequest (LoginRequestDto) "email", "password"
      */
     @PostMapping("/login")
-    public ResponseEntity<BaseResponseDto<TokenResponseDto>> login(@RequestBody LoginRequestDto loginRequest) {
-        try {
-            TokenResponseDto loginResponse = memberService.login(loginRequest);
-            BaseResponseDto<TokenResponseDto> response = BaseResponseDto.success(
-                    loginResponse, new BaseResponseDto.Meta("로그인 성공")
-            );
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (AuthenticationException e) {
-            BaseResponseDto<TokenResponseDto> response = BaseResponseDto.fail("로그인 실패");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        } catch (Exception e) {
-            BaseResponseDto<TokenResponseDto> response = BaseResponseDto.fail(e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+    public ResponseEntity<BaseResponseDto<TokenResponseDto>> login(@RequestBody @Valid LoginRequestDto loginRequest) {
+        TokenResponseDto loginResponse = memberService.login(loginRequest);
+        BaseResponseDto<TokenResponseDto> response = BaseResponseDto.success(
+                loginResponse, new BaseResponseDto.Meta("로그인 성공")
+        );
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     /**
