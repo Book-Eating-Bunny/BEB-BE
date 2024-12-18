@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/users/email-availability",
                                 "/api/v1/users/nickname-availability",
+                                "/api/v1/books",
                                 "/api/v1/reviews/{reviewId:\\d+}").permitAll()
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 )
