@@ -104,16 +104,10 @@ public class MemberController {
     public ResponseEntity<BaseResponseDto<TokenResponseDto>> reissueJwt(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION) String refreshToken) {
 
-        try {
-            TokenResponseDto tokenResponse = memberService.reissueJwt(refreshToken);
-            return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.success(
-                    tokenResponse, new BaseResponseDto.Meta("토큰 재발급 성공")
-            ));
-        } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail(e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponseDto.fail(e.getMessage()));
-        }
+        TokenResponseDto tokenResponse = memberService.reissueJwt(refreshToken);
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.success(
+                tokenResponse, new BaseResponseDto.Meta("토큰 재발급 성공")
+        ));
     }
 
     /**

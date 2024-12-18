@@ -12,6 +12,8 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.naming.AuthenticationException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -60,6 +62,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<BaseResponseDto<Void>> handleExpiredJwtExceptions(ExpiredJwtException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail("만료된 토큰"));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<BaseResponseDto<Void>> handleAuthenticationExceptions(AuthenticationException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail("인증 실패"));
     }
 
     @ExceptionHandler(Exception.class)
