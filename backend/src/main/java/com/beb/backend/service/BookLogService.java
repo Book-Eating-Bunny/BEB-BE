@@ -75,10 +75,18 @@ public class BookLogService {
 
     @Transactional
     public void deleteBookFromReadBook(Long readBookId) {
-        if (!readBookRepository.existsById(readBookId)) {
-            throw new BookLogException(BookLogExceptionInfo.READ_BOOK_NOT_FOUND);
+        ReadBook readBook = readBookRepository.findById(readBookId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.READ_BOOK_NOT_FOUND));
+
+        Member member = memberService.getCurrentMember();
+        if (!member.getId().equals(readBook.getMember().getId())) {
+            throw new BookLogException(BookLogExceptionInfo.READ_BOOK_FORBIDDEN);
         }
-        readBookRepository.deleteById(readBookId);
+
+        commentRepository.findByMemberAndBookAndParentCommentIsNull(member, readBook.getBook())
+                .ifPresent(commentRepository::delete);
+        readBook.getBook().decrementReviewCount();
+        readBookRepository.delete(readBook);
     }
 
     private CurrentUserWishlistBookDto mapToCurrentUserWishlistBookDto(WishlistBook wishlistBook) {
@@ -129,10 +137,15 @@ public class BookLogService {
 
     @Transactional
     public void deleteBookFromWishlistBook(Long wishlistBookId) {
-        if (!wishlistBookRepository.existsById(wishlistBookId)) {
-            throw new BookLogException(BookLogExceptionInfo.WISHLIST_BOOK_NOT_FOUND);
+        WishlistBook wishlistBook = wishlistBookRepository.findById(wishlistBookId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.WISHLIST_BOOK_NOT_FOUND));
+
+        Member member = memberService.getCurrentMember();
+        if (!member.getId().equals(wishlistBook.getMember().getId())) {
+            throw new BookLogException(BookLogExceptionInfo.WISHLIST_BOOK_FORBIDDEN);
         }
-        wishlistBookRepository.deleteById(wishlistBookId);
+
+        wishlistBookRepository.delete(wishlistBook);
     }
 
     private CurrentUserReviewDto mapToCurrentUserReviewDto(Comment review) {
