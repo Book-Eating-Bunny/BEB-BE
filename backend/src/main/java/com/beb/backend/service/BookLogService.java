@@ -255,4 +255,22 @@ public class BookLogService {
         commentRepository.delete(review);
         book.decrementReviewCount();
     }
+
+    /**
+     * 현재 사용자가 입력된 책을 찜한 책으로 등록했는지, 읽은 책으로 등록했는지, 책에 대한 리뷰를 작성했는지에 대한 정보를 반환
+     * 인증되지 않은 사용자는 빈 Optional로 반환
+     * @param book (Book) 확인할 도서 객체
+     */
+    public Optional<UserStatusDto> getCurrentUserStatusAboutBook(Book book) {
+        try {
+            Member member = memberService.getCurrentMember();
+            return Optional.of(new UserStatusDto(
+                    wishlistBookRepository.existsByMemberAndBook(member, book),
+                    readBookRepository.existsByMemberAndBook(member, book),
+                    commentRepository.existsByMemberAndBookAndParentCommentIsNull(member, book)
+            ));
+        } catch (MemberException e) {
+            return Optional.empty();
+        }
+    }
 }
