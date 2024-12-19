@@ -126,6 +126,9 @@ public class BookLogService {
         if (book.isEmpty()) throw new BookException(BookExceptionInfo.BOOK_NOT_FOUND);
 
         Member member = memberService.getCurrentMember();
+        if (readBookRepository.existsByMemberAndBook(member, book.get())) {
+            throw new BookLogException(BookLogExceptionInfo.CANNOT_ADD_READ_BOOK_TO_WISHLIST_BOOK);
+        }
         if (wishlistBookRepository.existsByMemberAndBook(member, book.get())) {
             throw new BookLogException(BookLogExceptionInfo.DUPLICATE_WISHLIST_BOOK);
         }

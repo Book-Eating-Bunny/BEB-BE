@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 public enum BookLogExceptionInfo {
     DUPLICATE_READ_BOOK(HttpStatus.BAD_REQUEST, "이미 읽은 책에 저장된 정보"),
     READ_BOOK_NOT_FOUND(HttpStatus.NOT_FOUND, "읽은 책 목록에 해당 도서가 존재하지 않음"),
+    CANNOT_ADD_READ_BOOK_TO_WISHLIST_BOOK(HttpStatus.BAD_REQUEST, "읽은 책을 찜한 책에 저장할 수 없음"),
     DUPLICATE_WISHLIST_BOOK(HttpStatus.BAD_REQUEST, "이미 찜한 책에 저장된 정보"),
     WISHLIST_BOOK_NOT_FOUND(HttpStatus.NOT_FOUND, "찜한 책 목록에 해당 도서가 존재하지 않음"),
     REVIEW_NOT_PUBLIC(HttpStatus.FORBIDDEN, "비공개 설정된 리뷰"),
