@@ -3,6 +3,8 @@ package com.beb.backend.service;
 import com.beb.backend.domain.Book;
 import com.beb.backend.domain.Category;
 import com.beb.backend.dto.*;
+import com.beb.backend.exception.BookException;
+import com.beb.backend.exception.BookExceptionInfo;
 import com.beb.backend.exception.OpenApiException;
 import com.beb.backend.exception.OpenApiExceptionInfo;
 import com.beb.backend.repository.BookRepository;
@@ -167,6 +169,16 @@ public class BookService {
         return new BookAndUserStatusDto(
                 BookDetailsDto.fromEntity(savedBook),
                 bookLogService.getCurrentUserStatusAboutBook(savedBook).orElse(null)
+        );
+    }
+
+    @Transactional
+    public BookAndUserStatusDto getBookDetailsById(Long bookId) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new BookException(BookExceptionInfo.BOOK_NOT_FOUND));
+        return new BookAndUserStatusDto(
+                BookDetailsDto.fromEntity(book),
+                bookLogService.getCurrentUserStatusAboutBook(book).orElse(null)
         );
     }
 }
