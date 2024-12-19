@@ -54,6 +54,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
     }
 
+    @ExceptionHandler(OpenApiException.class)
+    public ResponseEntity<BaseResponseDto<Void>> handleOpenApiExceptions(OpenApiException e) {
+        OpenApiExceptionInfo info = e.getInfo();
+        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<BaseResponseDto<Void>> handleBadCredentialsExceptions(BadCredentialsException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail("인증 실패"));

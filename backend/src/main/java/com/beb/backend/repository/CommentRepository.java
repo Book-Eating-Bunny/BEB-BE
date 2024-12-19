@@ -1,6 +1,8 @@
 package com.beb.backend.repository;
 
+import com.beb.backend.domain.Book;
 import com.beb.backend.domain.Comment;
+import com.beb.backend.domain.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     // 특정 Member가 작성한 리뷰 조회
@@ -21,4 +24,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     // 특정 리뷰에 달린 댓글 조회
     @Query("SELECT c FROM Comment c WHERE c.parentComment.id = :reviewId")
     List<Comment> findCommentsByParentReviewId(@Param("reviewId") Long reviewId);
+
+    Optional<Comment> findByMemberAndBookAndParentCommentIsNull(Member member, Book book);
+
+    boolean existsByMemberAndBookAndParentCommentIsNull(Member member, Book book);
 }

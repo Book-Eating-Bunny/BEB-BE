@@ -29,7 +29,7 @@ public class BookLogController {
                             @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
 
         Member member = memberService.getCurrentMember();
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("readAt", "createdAt").descending());
         return ResponseEntity.status(HttpStatus.OK).body(
                 bookLogService.getUserReadBooksById(member, pageable)
         );

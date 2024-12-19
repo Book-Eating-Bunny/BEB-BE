@@ -13,8 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -30,18 +28,13 @@ public class BookLogService {
 
 
     private CurrentUserReadBookDto mapToCurrentUserReadBookDto(ReadBook readBook) {
-        BigDecimal decimalRating = Optional.ofNullable(readBook.getBook().getAverageRating())
-                .map(avg -> BigDecimal.valueOf(avg).setScale(1, RoundingMode.HALF_UP))
-                .orElse(null);
-
         return new CurrentUserReadBookDto(
                 readBook.getId(),
-                new BookSummaryWithRatingDto(
+                new BookSummaryDto(
                         readBook.getBook().getId(),
                         readBook.getBook().getCoverImgUrl(),
                         readBook.getBook().getTitle(),
-                        readBook.getBook().getAuthor(),
-                        decimalRating
+                        readBook.getBook().getAuthor()
                 ),
                 readBook.getReadAt(),
                 readBook.getCreatedAt()
@@ -75,29 +68,35 @@ public class BookLogService {
                 .book(book.get())
                 .readAt(request.readAt()).build();
         readBookRepository.save(readBook);
+
+        wishlistBookRepository.findByMemberAndBook(member, book.get())
+                .ifPresent(wishlistBookRepository::delete);
     }
 
     @Transactional
     public void deleteBookFromReadBook(Long readBookId) {
-        if (!readBookRepository.existsById(readBookId)) {
-            throw new BookLogException(BookLogExceptionInfo.READ_BOOK_NOT_FOUND);
+        ReadBook readBook = readBookRepository.findById(readBookId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.READ_BOOK_NOT_FOUND));
+
+        Member member = memberService.getCurrentMember();
+        if (!member.getId().equals(readBook.getMember().getId())) {
+            throw new BookLogException(BookLogExceptionInfo.READ_BOOK_FORBIDDEN);
         }
-        readBookRepository.deleteById(readBookId);
+
+        commentRepository.findByMemberAndBookAndParentCommentIsNull(member, readBook.getBook())
+                .ifPresent(commentRepository::delete);
+        readBook.getBook().decrementReviewCount();
+        readBookRepository.delete(readBook);
     }
 
     private CurrentUserWishlistBookDto mapToCurrentUserWishlistBookDto(WishlistBook wishlistBook) {
-        BigDecimal decimalRating = Optional.ofNullable(wishlistBook.getBook().getAverageRating())
-                .map(avg -> BigDecimal.valueOf(avg).setScale(1, RoundingMode.HALF_UP))
-                .orElse(null);
-
         return new CurrentUserWishlistBookDto(
                 wishlistBook.getId(),
-                new BookSummaryWithRatingDto(
+                new BookSummaryDto(
                         wishlistBook.getBook().getId(),
                         wishlistBook.getBook().getCoverImgUrl(),
                         wishlistBook.getBook().getTitle(),
-                        wishlistBook.getBook().getAuthor(),
-                        decimalRating
+                        wishlistBook.getBook().getAuthor()
                 ),
                 wishlistBook.getCreatedAt()
         );
@@ -123,6 +122,9 @@ public class BookLogService {
         if (book.isEmpty()) throw new BookException(BookExceptionInfo.BOOK_NOT_FOUND);
 
         Member member = memberService.getCurrentMember();
+        if (readBookRepository.existsByMemberAndBook(member, book.get())) {
+            throw new BookLogException(BookLogExceptionInfo.CANNOT_ADD_READ_BOOK_TO_WISHLIST_BOOK);
+        }
         if (wishlistBookRepository.existsByMemberAndBook(member, book.get())) {
             throw new BookLogException(BookLogExceptionInfo.DUPLICATE_WISHLIST_BOOK);
         }
@@ -135,10 +137,15 @@ public class BookLogService {
 
     @Transactional
     public void deleteBookFromWishlistBook(Long wishlistBookId) {
-        if (!wishlistBookRepository.existsById(wishlistBookId)) {
-            throw new BookLogException(BookLogExceptionInfo.WISHLIST_BOOK_NOT_FOUND);
+        WishlistBook wishlistBook = wishlistBookRepository.findById(wishlistBookId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.WISHLIST_BOOK_NOT_FOUND));
+
+        Member member = memberService.getCurrentMember();
+        if (!member.getId().equals(wishlistBook.getMember().getId())) {
+            throw new BookLogException(BookLogExceptionInfo.WISHLIST_BOOK_FORBIDDEN);
         }
-        wishlistBookRepository.deleteById(wishlistBookId);
+
+        wishlistBookRepository.delete(wishlistBook);
     }
 
     private CurrentUserReviewDto mapToCurrentUserReviewDto(Comment review) {
@@ -254,5 +261,23 @@ public class BookLogService {
 
         commentRepository.delete(review);
         book.decrementReviewCount();
+    }
+
+    /**
+     * 현재 사용자가 입력된 책을 찜한 책으로 등록했는지, 읽은 책으로 등록했는지, 책에 대한 리뷰를 작성했는지에 대한 정보를 반환
+     * 인증되지 않은 사용자는 빈 Optional로 반환
+     * @param book (Book) 확인할 도서 객체
+     */
+    public Optional<UserStatusDto> getCurrentUserStatusAboutBook(Book book) {
+        try {
+            Member member = memberService.getCurrentMember();
+            return Optional.of(new UserStatusDto(
+                    wishlistBookRepository.existsByMemberAndBook(member, book),
+                    readBookRepository.existsByMemberAndBook(member, book),
+                    commentRepository.existsByMemberAndBookAndParentCommentIsNull(member, book)
+            ));
+        } catch (MemberException e) {
+            return Optional.empty();
+        }
     }
 }
