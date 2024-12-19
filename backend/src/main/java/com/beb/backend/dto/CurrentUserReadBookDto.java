@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record CurrentUserReadBookDto(
         Long readBookId,
-        BookSummaryWithRatingDto book,
+        BookSummaryDto book,
         LocalDate readAt,
         LocalDateTime createdAt
 ) {

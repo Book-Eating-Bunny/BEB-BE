@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record CurrentUserWishlistBookDto(
         Long wishlistBookId,
-        BookSummaryWithRatingDto book,
+        BookSummaryDto book,
         LocalDateTime createdAt
 ) {
 }

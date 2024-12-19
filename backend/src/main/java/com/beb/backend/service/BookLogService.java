@@ -13,8 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -30,18 +28,13 @@ public class BookLogService {
 
 
     private CurrentUserReadBookDto mapToCurrentUserReadBookDto(ReadBook readBook) {
-        BigDecimal decimalRating = Optional.ofNullable(readBook.getBook().getAverageRating())
-                .map(avg -> BigDecimal.valueOf(avg).setScale(1, RoundingMode.HALF_UP))
-                .orElse(null);
-
         return new CurrentUserReadBookDto(
                 readBook.getId(),
-                new BookSummaryWithRatingDto(
+                new BookSummaryDto(
                         readBook.getBook().getId(),
                         readBook.getBook().getCoverImgUrl(),
                         readBook.getBook().getTitle(),
-                        readBook.getBook().getAuthor(),
-                        decimalRating
+                        readBook.getBook().getAuthor()
                 ),
                 readBook.getReadAt(),
                 readBook.getCreatedAt()
@@ -89,18 +82,13 @@ public class BookLogService {
     }
 
     private CurrentUserWishlistBookDto mapToCurrentUserWishlistBookDto(WishlistBook wishlistBook) {
-        BigDecimal decimalRating = Optional.ofNullable(wishlistBook.getBook().getAverageRating())
-                .map(avg -> BigDecimal.valueOf(avg).setScale(1, RoundingMode.HALF_UP))
-                .orElse(null);
-
         return new CurrentUserWishlistBookDto(
                 wishlistBook.getId(),
-                new BookSummaryWithRatingDto(
+                new BookSummaryDto(
                         wishlistBook.getBook().getId(),
                         wishlistBook.getBook().getCoverImgUrl(),
                         wishlistBook.getBook().getTitle(),
-                        wishlistBook.getBook().getAuthor(),
-                        decimalRating
+                        wishlistBook.getBook().getAuthor()
                 ),
                 wishlistBook.getCreatedAt()
         );
