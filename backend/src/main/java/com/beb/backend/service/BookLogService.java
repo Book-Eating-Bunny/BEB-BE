@@ -176,6 +176,44 @@ public class BookLogService {
         return BaseResponseDto.success(new ReviewsResponseDto<>(reviews), meta);
     }
 
+    private BookReviewDto mapToBookReviewDto(Comment review) {
+        return new BookReviewDto(
+                review.getId(),
+                new MemberSummaryDto(
+                        review.getMember().getId(),
+                        review.getMember().getNickname()
+                ),
+                review.getRating(),
+                review.getContent(),
+                review.getIsSpoiler(),
+                review.getCreatedAt(),
+                review.getUpdatedAt()
+        );
+    }
+
+    public BaseResponseDto<ReviewsResponseDto<BookReviewDto>>
+    getBookReviews(Long bookId, Pageable pageable) {
+        if (!bookRepository.existsById(bookId)) throw new BookException(BookExceptionInfo.BOOK_NOT_FOUND);
+
+        Page<Comment> reviewsPage;
+        try {
+            // 인증된 사용자는 공개 설정 or 사용자 본인 작성 리뷰 조회
+            Member member = memberService.getCurrentMember();
+            reviewsPage = commentRepository.findPublicReviewsByBookIdAndMemberId(bookId, member.getId(), pageable);
+        } catch (MemberException e) {
+            // 인증되지 않은 사용자는 공개 설정된 리뷰 조회
+            reviewsPage = commentRepository.findPublicReviewsByBookId(bookId, pageable);
+        }
+
+        List<BookReviewDto> reviews = reviewsPage.getContent().stream()
+                .map(this::mapToBookReviewDto).toList();
+
+        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
+                reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements(),
+                "조회 성공");
+        return BaseResponseDto.success(new ReviewsResponseDto<>(reviews), meta);
+    }
+
     @Transactional
     public CreateReviewResponseDto createReview(CreateReviewRequestDto request) {
         Member member = memberService.getCurrentMember();

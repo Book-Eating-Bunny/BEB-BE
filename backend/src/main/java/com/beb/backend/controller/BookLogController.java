@@ -83,6 +83,17 @@ public class BookLogController {
         );
     }
 
+    @GetMapping("/books/{bookId}/reviews")
+    public ResponseEntity<BaseResponseDto<ReviewsResponseDto<BookReviewDto>>>
+    getBookReviews(@PathVariable @Min(value = 1) Long bookId,
+                   @RequestParam(defaultValue = "1") @Min(value = 1) int page,
+                   @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        return ResponseEntity.status(HttpStatus.OK).body(
+                bookLogService.getBookReviews(bookId, pageable)
+        );
+    }
+
     @PostMapping("/reviews")
     public ResponseEntity<BaseResponseDto<CreateReviewResponseDto>>
     createReview(@RequestBody @Valid CreateReviewRequestDto request) {
