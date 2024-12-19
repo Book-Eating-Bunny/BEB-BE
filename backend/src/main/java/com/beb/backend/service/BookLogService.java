@@ -75,6 +75,9 @@ public class BookLogService {
                 .book(book.get())
                 .readAt(request.readAt()).build();
         readBookRepository.save(readBook);
+
+        wishlistBookRepository.findByMemberAndBook(member, book.get())
+                .ifPresent(wishlistBookRepository::delete);
     }
 
     @Transactional
