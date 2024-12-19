@@ -82,6 +82,7 @@ public class BookService {
                             item.image(),
                             item.title(),
                             item.author(),
+                            book.map(Book::getId).orElse(null),
                             book.map(Book::getAverageRatingAsBigDecimal).orElse(null),
                             book.map(Book::getReviewCount).orElse(0)
                     );

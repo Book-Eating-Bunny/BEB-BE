@@ -1,5 +1,7 @@
 package com.beb.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.math.BigDecimal;
 
 public record SearchBookInfoDto(
@@ -7,6 +9,7 @@ public record SearchBookInfoDto(
         String coverImgUrl,
         String title,
         String author,
+        @JsonInclude(JsonInclude.Include.NON_NULL) Long bookId,
         BigDecimal averageRating,
         Integer reviewCount
 ) {

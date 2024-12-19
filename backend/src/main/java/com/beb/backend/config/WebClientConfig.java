@@ -14,7 +14,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WebClientConfig {
 
-    private final Environment env;
+    @Value("${open-api.naver.client-id}")
+    private String CLIENT_ID;
+
+    @Value("${open-api.naver.client-secret}")
+    private String CLIENT_SECRET;
 
     @Value("${open-api.aladin.ttbkey}")
     private String TTBKEY;
@@ -22,8 +26,8 @@ public class WebClientConfig {
     @Bean("naverWebClient")
     public WebClient naverWebClient(WebClient.Builder builder) {
         return builder.baseUrl("https://openapi.naver.com/v1/search")
-                .defaultHeader("X-Naver-Client-Id", env.getProperty("open-api.naver.client-id"))
-                .defaultHeader("X-Naver-Client-Secret", env.getProperty("open-api.naver.client-secret"))
+                .defaultHeader("X-Naver-Client-Id", CLIENT_ID)
+                .defaultHeader("X-Naver-Client-Secret", CLIENT_SECRET)
                 .build();
     }
 
