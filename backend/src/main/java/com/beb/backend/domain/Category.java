@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
+import java.util.Optional;
+
 @Entity
 @Table(name = "category",
 uniqueConstraints = @UniqueConstraint(columnNames = {"name", "parent_id", "mall_type"}))
@@ -27,6 +29,7 @@ public class Category {
     @Column(name = "mall_type", nullable = false)
     private MallType mallType;
 
+    @Getter
     public enum MallType {
         KOREAN_BOOK("국내도서"),
         FOREIGN_BOOK("외국도서");
@@ -37,8 +40,13 @@ public class Category {
             this.label = label;
         }
 
-        public String getLabel() {
-            return label;
+        public static Optional<MallType> valueOfLabel(String label) {
+            for (MallType mallType : MallType.values()) {
+                if (mallType.label.equals(label)) {
+                    return Optional.of(mallType);
+                }
+            }
+            return Optional.empty();
         }
     }
 }
