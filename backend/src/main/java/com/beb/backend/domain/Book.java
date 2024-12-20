@@ -47,7 +47,7 @@ public class Book {
     private String isbn;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id")
     private Category category;
 
     @Min(value = 0) @Max(value = 5)
