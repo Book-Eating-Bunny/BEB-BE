@@ -187,4 +187,105 @@ public class BookService {
                 bookLogService.getCurrentUserStatusAboutBook(book).orElse(null)
         );
     }
+
+    /**
+     * 알라딘 상품 목록 조회 API 호출하여 응답 Optional 반환
+     * @param queryType (String) 상품 목록 종류 (Bestseller / ItemNewAll)
+     * @param searchTarget (String) 조회 대상 Mall (Book(국내도서) / Foreign(외국도서))
+     * @param start (Integer) 검색 결과 시작 페이지 (1 이상)
+     * @param maxResults (Integer) 한 페이지당 최대 출력 개수 (1-50)
+     */
+    private Optional<AladinBookSearchResponseDto>
+    callAladinItemListApi(String queryType, String searchTarget,
+                          @Min(value = 1) Integer start,
+                          @Min(value = 1) @Max(value = 50) Integer maxResults) {
+        try {
+            return Optional.ofNullable(aladinWebClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/ItemList.aspx")
+                            .queryParam("ttbkey", "{ttbkey}")
+                            .queryParam("queryType", queryType)         // 리스트 종류 (Bestseller / ItemNewAll)
+                            .queryParam("searchTarget", searchTarget)   // 조회 대상 Mall (Book / Foreign)
+                            .queryParam("start", start)                 // 기본값 1
+                            .queryParam("maxResults", maxResults)       // 기본값 10
+                            .queryParam("cover", "Big")          // 표지 크기
+                            .queryParam("output", "js")
+                            .queryParam("version", "20131101")
+                            .build())
+                    .retrieve()
+                    .onStatus(
+                            status -> !status.is2xxSuccessful(),
+                            response -> Mono.error(new OpenApiException(OpenApiExceptionInfo.API_CALL_ERROR))
+                    )
+                    .bodyToMono(AladinBookSearchResponseDto.class)
+                    .block());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * AladinBookItemDto에서 DB에 새로 저장해야 할 도서 골라 Book 목록으로 반환
+     * @param aladinBookItems 알라딘 상품 리스트
+     */
+    private List<Book> filterNonExistingBooks(List<AladinBookItemDto> aladinBookItems) {
+        // 입력 리스트에서 중복된 ISBN 제거
+        Map<String, AladinBookItemDto> uniqueItems = aladinBookItems.stream()
+                .filter(item -> item.isbn13() != null && !item.isbn13().isBlank())
+                .collect(Collectors.toMap(AladinBookItemDto::isbn13,
+                        item -> item,
+                        (existing, replacement) -> existing // 중복 시 첫 번째 데이터 유지
+                ));
+
+        List<String> existingIsbns = bookRepository.findAllByIsbnIn(uniqueItems.keySet().stream().toList())
+                .stream().map(Book::getIsbn).toList();
+
+        return uniqueItems.values().stream()
+                .filter(item -> !existingIsbns.contains(item.isbn13()))
+                .map(this::mapToBookEntity)
+                .toList();
+    }
+
+    private void fetchAndSaveBooks(String queryType, String searchTarget, int totalCount) {
+        int batchSize = 50;
+        int totalPages = totalCount / batchSize;
+
+        for (int start = 1; start <= totalPages; start++) {
+            // TODO: Optional이 없을 경우에 대한 logging
+            callAladinItemListApi(queryType, searchTarget, start, batchSize)
+                    .ifPresent(apiResponse -> {
+                        List<Book> filteredBooks = filterNonExistingBooks(apiResponse.item());
+
+                        for (Book book : filteredBooks) {
+                            try {
+                                bookRepository.save(book);
+                            } catch (Exception e) {
+                                System.out.println("failed to save book: " + e.getMessage());
+                            }
+                        }
+                    });
+        }
+    }
+
+    @Scheduled(cron = "0 0 2 ? * MON", zone = "Asia/Seoul")
+    @Transactional
+    public void fetchAndSaveBestsellers() {
+        System.out.println("Bestseller: Scheduled task executed at " + LocalDateTime.now());
+        try {
+            fetchAndSaveBooks("Bestseller", "Book", 1000);
+            fetchAndSaveBooks("Bestseller", "Foreign", 200);
+        } catch (Exception e) {
+            System.out.println("Bestseller: Error: " + e.getMessage());
+        }
+    }
+
+    @Scheduled(cron = "0 0 2 ? * TUE", zone = "Asia/Seoul")
+    @Transactional
+    public void fetchAndSaveNewlyPublishedBooks() {
+        System.out.println("NewlyPublished: Scheduled task executed at " + LocalDateTime.now());
+        try {
+            fetchAndSaveBooks("ItemNewAll", "Book", 1000);
+        } catch (Exception e) {
+            System.out.println("NewlyPublished: Error: " + e.getMessage());
+        }
+    }
 }
