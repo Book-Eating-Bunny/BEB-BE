@@ -58,7 +58,8 @@ public class BookLogService {
         Optional<Book> book = bookRepository.findById(request.bookId());
         if (book.isEmpty()) throw new BookException(BookExceptionInfo.BOOK_NOT_FOUND);
 
-        Member member = memberService.getCurrentMember();
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         if (readBookRepository.existsByMemberAndBook(member, book.get())) {
             throw new BookLogException(BookLogExceptionInfo.DUPLICATE_READ_BOOK);
         }
@@ -78,7 +79,8 @@ public class BookLogService {
         ReadBook readBook = readBookRepository.findById(readBookId)
                 .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.READ_BOOK_NOT_FOUND));
 
-        Member member = memberService.getCurrentMember();
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         if (!member.getId().equals(readBook.getMember().getId())) {
             throw new BookLogException(BookLogExceptionInfo.READ_BOOK_FORBIDDEN);
         }
@@ -121,7 +123,8 @@ public class BookLogService {
         Optional<Book> book = bookRepository.findById(request.bookId());
         if (book.isEmpty()) throw new BookException(BookExceptionInfo.BOOK_NOT_FOUND);
 
-        Member member = memberService.getCurrentMember();
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         if (readBookRepository.existsByMemberAndBook(member, book.get())) {
             throw new BookLogException(BookLogExceptionInfo.CANNOT_ADD_READ_BOOK_TO_WISHLIST_BOOK);
         }
@@ -140,10 +143,9 @@ public class BookLogService {
         WishlistBook wishlistBook = wishlistBookRepository.findById(wishlistBookId)
                 .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.WISHLIST_BOOK_NOT_FOUND));
 
-        Member member = memberService.getCurrentMember();
-        if (!member.getId().equals(wishlistBook.getMember().getId())) {
-            throw new BookLogException(BookLogExceptionInfo.WISHLIST_BOOK_FORBIDDEN);
-        }
+        memberService.getCurrentMember()
+                .filter(member -> member.getId().equals(wishlistBook.getMember().getId()))
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.WISHLIST_BOOK_FORBIDDEN));
 
         wishlistBookRepository.delete(wishlistBook);
     }
@@ -176,9 +178,42 @@ public class BookLogService {
         return BaseResponseDto.success(new ReviewsResponseDto<>(reviews), meta);
     }
 
+    private BookReviewDto mapToBookReviewDto(Comment review) {
+        return new BookReviewDto(
+                review.getId(),
+                new MemberSummaryDto(
+                        review.getMember().getId(),
+                        review.getMember().getNickname()
+                ),
+                review.getRating(),
+                review.getContent(),
+                review.getIsSpoiler(),
+                review.getCreatedAt(),
+                review.getUpdatedAt()
+        );
+    }
+
+    public BaseResponseDto<ReviewsResponseDto<BookReviewDto>>
+    getBookReviews(Long bookId, Pageable pageable) {
+        if (!bookRepository.existsById(bookId)) throw new BookException(BookExceptionInfo.BOOK_NOT_FOUND);
+
+        Page<Comment> reviewsPage = memberService.getCurrentMember()
+                .map(member -> commentRepository.findPublicReviewsByBookIdAndMemberId(bookId, member.getId(), pageable))
+                .orElseGet(() -> commentRepository.findPublicReviewsByBookId(bookId, pageable));
+
+        List<BookReviewDto> reviews = reviewsPage.getContent().stream()
+                .map(this::mapToBookReviewDto).toList();
+
+        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
+                reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements(),
+                "조회 성공");
+        return BaseResponseDto.success(new ReviewsResponseDto<>(reviews), meta);
+    }
+
     @Transactional
     public CreateReviewResponseDto createReview(CreateReviewRequestDto request) {
-        Member member = memberService.getCurrentMember();
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         Book book = bookRepository.findById(request.bookId())
                 .orElseThrow(() -> new BookException(BookExceptionInfo.BOOK_NOT_FOUND));
 
@@ -203,14 +238,9 @@ public class BookLogService {
                 .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
 
         if (!review.getIsPublic()) {
-            try {
-                Member member = memberService.getCurrentMember();
-                if (!member.getId().equals(review.getMember().getId())) {
-                    throw new BookLogException(BookLogExceptionInfo.REVIEW_NOT_PUBLIC);
-                }
-            } catch (MemberException e) {
-                throw new BookLogException(BookLogExceptionInfo.REVIEW_NOT_PUBLIC);
-            }
+            memberService.getCurrentMember()
+                    .filter(member -> member.getId().equals(review.getMember().getId()))
+                    .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_PUBLIC));
         }
 
         return new ReviewDetailsResponseDto(
@@ -237,10 +267,11 @@ public class BookLogService {
     public void updateReview(Long reviewId, UpdateReviewRequestDto request) {
         Comment review = commentRepository.findById(reviewId)
                 .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
-        Member member = memberService.getCurrentMember();
-        if (!member.getId().equals(review.getMember().getId())) {
-            throw new BookLogException(BookLogExceptionInfo.REVIEW_FORBIDDEN);
-        }
+
+        memberService.getCurrentMember()
+                .filter(member -> member.getId().equals(review.getMember().getId()))
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_FORBIDDEN));
+
         if (request.rating() != null) review.setRating(request.rating());
         if (request.content() != null) review.setContent(request.content());
         if (request.isSpoiler() != null) review.setIsSpoiler(request.isSpoiler());
@@ -252,10 +283,11 @@ public class BookLogService {
     public void deleteReview(Long reviewId) {
         Comment review = commentRepository.findById(reviewId)
                 .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
-        Member member = memberService.getCurrentMember();
-        if (!member.getId().equals(review.getMember().getId())) {
-            throw new BookLogException(BookLogExceptionInfo.REVIEW_FORBIDDEN);
-        }
+
+        memberService.getCurrentMember()
+                .filter(member -> member.getId().equals(review.getMember().getId()))
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_FORBIDDEN));
+
         Book book = bookRepository.findById(review.getBook().getId())
                 .orElseThrow(() -> new BookException(BookExceptionInfo.BOOK_NOT_FOUND));
 
@@ -269,15 +301,11 @@ public class BookLogService {
      * @param book (Book) 확인할 도서 객체
      */
     public Optional<UserStatusDto> getCurrentUserStatusAboutBook(Book book) {
-        try {
-            Member member = memberService.getCurrentMember();
-            return Optional.of(new UserStatusDto(
-                    wishlistBookRepository.existsByMemberAndBook(member, book),
-                    readBookRepository.existsByMemberAndBook(member, book),
-                    commentRepository.existsByMemberAndBookAndParentCommentIsNull(member, book)
-            ));
-        } catch (MemberException e) {
-            return Optional.empty();
-        }
+        return memberService.getCurrentMember()
+                .map(member -> new UserStatusDto(
+                        wishlistBookRepository.existsByMemberAndBook(member, book),
+                        readBookRepository.existsByMemberAndBook(member, book),
+                        commentRepository.existsByMemberAndBookAndParentCommentIsNull(member, book)
+                ));
     }
 }
