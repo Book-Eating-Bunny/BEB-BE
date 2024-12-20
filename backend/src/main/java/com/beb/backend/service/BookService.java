@@ -11,11 +11,15 @@ import com.beb.backend.repository.BookRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -133,24 +137,25 @@ public class BookService {
         return apiResponse.item().getFirst();
     }
 
-    private Book fetchAndSaveBookByIsbn(String isbn) {
-        AladinBookItemDto searchedItem = callAladinIsbnBookSearchApi(isbn);
-
+    private Book mapToBookEntity(AladinBookItemDto aladinBookItem) {
         // 카테고리 정보 파싱하여 DB에 저장된 Category 객체 찾기
         Category category = categoryService
-                .findCategoryByCategoryName(searchedItem.categoryName())
+                .findCategoryByCategoryName(aladinBookItem.categoryName())
                 .orElse(null);
 
-        Book book = Book.builder()
-                .title(searchedItem.title())
-                .author(searchedItem.author())
-                .coverImgUrl(searchedItem.cover())
-                .publisher(searchedItem.publisher())
-                .publishedDate(searchedItem.pubDate())
-                .isbn(searchedItem.isbn13())
+        return Book.builder()
+                .title(aladinBookItem.title())
+                .author(aladinBookItem.author())
+                .coverImgUrl(aladinBookItem.cover())
+                .publisher(aladinBookItem.publisher())
+                .publishedDate(aladinBookItem.pubDate())
+                .isbn(aladinBookItem.isbn13())
                 .category(category)
                 .build();
+    }
 
+    private Book fetchAndSaveBookByIsbn(String isbn) {
+        Book book = mapToBookEntity(callAladinIsbnBookSearchApi(isbn));
         return bookRepository.save(book);
     }
 
