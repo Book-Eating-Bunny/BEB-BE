@@ -162,7 +162,7 @@ public class MemberService {
      */
     @Transactional
     public void updateUserProfile(UpdateProfileRequestDto request) {
-        Member member = getCurrentMember();
+        Member member = getCurrentMember().orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
 
         if (request.nickname() != null && !request.nickname().equals(member.getNickname())) {
             if (isNicknameDuplicated(request.nickname())) {
@@ -176,9 +176,8 @@ public class MemberService {
         if (request.profileImgPath() != null) member.setProfileImgPath(request.profileImgPath());
     }
 
-    public Member getCurrentMember() {
+    public Optional<Member> getCurrentMember() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return memberRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
+        return memberRepository.findByEmail(authentication.getName());
     }
 }

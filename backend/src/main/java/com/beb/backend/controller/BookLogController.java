@@ -2,6 +2,8 @@ package com.beb.backend.controller;
 
 import com.beb.backend.domain.Member;
 import com.beb.backend.dto.*;
+import com.beb.backend.exception.MemberException;
+import com.beb.backend.exception.MemberExceptionInfo;
 import com.beb.backend.service.BookLogService;
 import com.beb.backend.service.MemberService;
 import jakarta.validation.Valid;
@@ -28,7 +30,8 @@ public class BookLogController {
     getCurrentUserReadBooks(@RequestParam(defaultValue = "1") @Min(value = 1) int page,
                             @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
 
-        Member member = memberService.getCurrentMember();
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("readAt", "createdAt").descending());
         return ResponseEntity.status(HttpStatus.OK).body(
                 bookLogService.getUserReadBooksById(member, pageable)
@@ -52,7 +55,8 @@ public class BookLogController {
     getCurrentUserWishlistBooks(@RequestParam(defaultValue = "1") @Min(value = 1) int page,
                                 @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
 
-        Member member = memberService.getCurrentMember();
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
         return ResponseEntity.status(HttpStatus.OK).body(
                 bookLogService.getUserWishlistBooksById(member, pageable)
@@ -76,7 +80,8 @@ public class BookLogController {
     public ResponseEntity<BaseResponseDto<ReviewsResponseDto<CurrentUserReviewDto>>> getCurrentUserReviews(
             @RequestParam(defaultValue = "1") @Min(value = 1) int page,
             @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
-        Member member = memberService.getCurrentMember();
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
         return ResponseEntity.status(HttpStatus.OK).body(
                 bookLogService.getUserReviewsById(member.getId(), pageable)

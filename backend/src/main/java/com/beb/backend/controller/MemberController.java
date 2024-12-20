@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -126,10 +125,11 @@ public class MemberController {
      */
     @GetMapping("/me")
     public ResponseEntity<BaseResponseDto<ProfileResponseDto>> getCurrentUserProfile() {
-        Member member = memberService.getCurrentMember();
-        ProfileResponseDto profile = memberService.getUserProfileById(member.getId());
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
+
         return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.success(
-                profile, new BaseResponseDto.Meta("프로필 조회 성공")
+                memberService.getUserProfileById(member.getId()), new BaseResponseDto.Meta("프로필 조회 성공")
         ));
     }
 
