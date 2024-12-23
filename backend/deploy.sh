@@ -1,4 +1,4 @@
-cp /home/chaeryeon0402/application.yml /var/lib/jenkins/workspace/backend-pipeline/backend/src/main/resources/application.yml
+cp /home/application.yml /var/lib/jenkins/workspace/backend-pipeline/backend/src/main/resources/application.yml
 
 cd /var/lib/jenkins/workspace/backend-pipeline/backend
 
