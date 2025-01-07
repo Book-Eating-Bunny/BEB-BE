@@ -205,4 +205,8 @@ public class MemberService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return memberRepository.findByEmail(authentication.getName());
     }
+
+    public Optional<Member> getMemberById(Long memberId) {
+        return memberRepository.findById(memberId);
+    }
 }

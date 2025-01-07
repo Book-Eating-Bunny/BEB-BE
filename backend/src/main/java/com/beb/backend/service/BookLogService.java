@@ -27,8 +27,8 @@ public class BookLogService {
     private final CommentRepository commentRepository;
 
 
-    private CurrentUserReadBookDto mapToCurrentUserReadBookDto(ReadBook readBook) {
-        return new CurrentUserReadBookDto(
+    private UserReadBookDto mapToUserReadBookDto(ReadBook readBook) {
+        return new UserReadBookDto(
                 readBook.getId(),
                 new BookSummaryDto(
                         readBook.getBook().getId(),
@@ -41,16 +41,29 @@ public class BookLogService {
         );
     }
 
-    @Transactional
-    public BaseResponseDto<ReadBooksResponseDto<CurrentUserReadBookDto>> getUserReadBooksById(Member memberId, Pageable pageable) {
-        Page<ReadBook> readBookPage = readBookRepository.findByMember(memberId, pageable);
-        List<CurrentUserReadBookDto> readBooks = readBookPage.getContent().stream()
-                .map(this::mapToCurrentUserReadBookDto).toList();
+    private BaseResponseDto<ReadBooksResponseDto<UserReadBookDto>> getReadBooksForMember(Member member, Pageable pageable) {
+        Page<ReadBook> readBookPage = readBookRepository.findByMember(member, pageable);
+        List<UserReadBookDto> readBooks = readBookPage.getContent().stream()
+                .map(this::mapToUserReadBookDto).toList();
 
         BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
                 readBookPage.getNumber(), readBookPage.getTotalPages(), readBookPage.getTotalElements(),
                 "조회 성공");
         return BaseResponseDto.success(new ReadBooksResponseDto<>(readBooks), meta);
+    }
+
+    @Transactional
+    public BaseResponseDto<ReadBooksResponseDto<UserReadBookDto>> getCurrentUserReadBooks(Pageable pageable) {
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
+        return getReadBooksForMember(member, pageable);
+    }
+
+    @Transactional
+    public BaseResponseDto<ReadBooksResponseDto<UserReadBookDto>> getUserReadBooks(Long memberId, Pageable pageable) {
+        Member member = memberService.getMemberById(memberId)
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
+        return getReadBooksForMember(member, pageable);
     }
 
     @Transactional

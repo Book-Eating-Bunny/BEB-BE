@@ -26,16 +26,22 @@ public class BookLogController {
     private final MemberService memberService;
 
     @GetMapping("/users/me/read-books")
-    public ResponseEntity<BaseResponseDto<ReadBooksResponseDto<CurrentUserReadBookDto>>>
+    public ResponseEntity<BaseResponseDto<ReadBooksResponseDto<UserReadBookDto>>>
     getCurrentUserReadBooks(@RequestParam(defaultValue = "1") @Min(value = 1) int page,
                             @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
 
-        Member member = memberService.getCurrentMember()
-                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("readAt", "createdAt").descending());
-        return ResponseEntity.status(HttpStatus.OK).body(
-                bookLogService.getUserReadBooksById(member, pageable)
-        );
+        return ResponseEntity.status(HttpStatus.OK).body(bookLogService.getCurrentUserReadBooks(pageable));
+    }
+
+    @GetMapping("/users/{userId}/read-books")
+    public ResponseEntity<BaseResponseDto<ReadBooksResponseDto<UserReadBookDto>>>
+    getUserReadBooks(@PathVariable @Min(value = 1) Long userId,
+                     @RequestParam(defaultValue = "1") @Min(value = 1) int page,
+                     @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
+
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("readAt", "createdAt").descending());
+        return ResponseEntity.status(HttpStatus.OK).body(bookLogService.getUserReadBooks(userId, pageable));
     }
 
     @PostMapping("/users/me/read-books")

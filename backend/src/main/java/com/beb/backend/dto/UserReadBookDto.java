@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record CurrentUserReadBookDto(
+public record UserReadBookDto(
         Long readBookId,
         BookSummaryDto book,
         LocalDate readAt,
