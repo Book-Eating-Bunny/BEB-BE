@@ -103,8 +103,8 @@ public class BookLogService {
         readBookRepository.delete(readBook);
     }
 
-    private CurrentUserWishlistBookDto mapToCurrentUserWishlistBookDto(WishlistBook wishlistBook) {
-        return new CurrentUserWishlistBookDto(
+    private UserWishlistBookDto mapToUserWishlistBookDto(WishlistBook wishlistBook) {
+        return new UserWishlistBookDto(
                 wishlistBook.getId(),
                 new BookSummaryDto(
                         wishlistBook.getBook().getId(),
@@ -116,18 +116,32 @@ public class BookLogService {
         );
     }
 
-    @Transactional
-    public BaseResponseDto<WishlistBooksResponseDto<CurrentUserWishlistBookDto>>
-    getUserWishlistBooksById(Member memberId, Pageable pageable) {
-
+    private BaseResponseDto<WishlistBooksResponseDto<UserWishlistBookDto>>
+    getWishlistBooksForMember(Member memberId, Pageable pageable) {
         Page<WishlistBook> wishlistBookPage = wishlistBookRepository.findByMember(memberId, pageable);
-        List<CurrentUserWishlistBookDto> wishlistBooks = wishlistBookPage.getContent().stream()
-                .map(this::mapToCurrentUserWishlistBookDto).toList();
+        List<UserWishlistBookDto> wishlistBooks = wishlistBookPage.getContent().stream()
+                .map(this::mapToUserWishlistBookDto).toList();
 
         BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
                 wishlistBookPage.getNumber(), wishlistBookPage.getTotalPages(), wishlistBookPage.getTotalElements(),
                 "조회 성공");
         return BaseResponseDto.success(new WishlistBooksResponseDto<>(wishlistBooks), meta);
+    }
+
+    @Transactional
+    public BaseResponseDto<WishlistBooksResponseDto<UserWishlistBookDto>>
+    getCurrentUserWishlistBooks(Pageable pageable) {
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
+        return getWishlistBooksForMember(member, pageable);
+    }
+
+    @Transactional
+    public BaseResponseDto<WishlistBooksResponseDto<UserWishlistBookDto>>
+    getUserWishlistBooks(Long memberId, Pageable pageable) {
+        Member member = memberService.getMemberById(memberId)
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
+        return getWishlistBooksForMember(member, pageable);
     }
 
     @Transactional

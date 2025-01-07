@@ -57,16 +57,22 @@ public class BookLogController {
     }
 
     @GetMapping("/users/me/want-to-read-books")
-    public ResponseEntity<BaseResponseDto<WishlistBooksResponseDto<CurrentUserWishlistBookDto>>>
+    public ResponseEntity<BaseResponseDto<WishlistBooksResponseDto<UserWishlistBookDto>>>
     getCurrentUserWishlistBooks(@RequestParam(defaultValue = "1") @Min(value = 1) int page,
                                 @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
 
-        Member member = memberService.getCurrentMember()
-                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
-        return ResponseEntity.status(HttpStatus.OK).body(
-                bookLogService.getUserWishlistBooksById(member, pageable)
-        );
+        return ResponseEntity.status(HttpStatus.OK).body(bookLogService.getCurrentUserWishlistBooks(pageable));
+    }
+
+    @GetMapping("/users/{userId}/want-to-read-books")
+    public ResponseEntity<BaseResponseDto<WishlistBooksResponseDto<UserWishlistBookDto>>>
+    getUserWishlistBooks(@PathVariable @Min(value = 1) Long userId,
+                         @RequestParam(defaultValue = "1") @Min(value = 1) int page,
+                         @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
+
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        return ResponseEntity.status(HttpStatus.OK).body(bookLogService.getUserWishlistBooks(userId, pageable));
     }
 
     @PostMapping("/users/me/want-to-read-books")
