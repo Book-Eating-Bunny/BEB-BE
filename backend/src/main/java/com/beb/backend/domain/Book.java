@@ -97,11 +97,26 @@ public class Book {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void incrementReviewCount() {
+    public void addRating(int rating) {
+        if (this.reviewCount > 0) {
+            this.averageRating = (this.averageRating * this.reviewCount + rating) / (this.reviewCount + 1);
+        } else {
+            this.averageRating = (double) rating;
+        }
         this.reviewCount++;
     }
 
-    public void decrementReviewCount() {
+    public void updateRating(int oldRating, int newRating) {
+        if (this.reviewCount == 0) throw new IllegalStateException("평점을 업데이트할 리뷰가 존재하지 않음");
+        this.averageRating += ((double) (newRating - oldRating)) / this.reviewCount;
+    }
+
+    public void removeRating(int rating) {
+        if (this.reviewCount > 1) {
+            this.averageRating = (this.averageRating * this.reviewCount - rating) / (this.reviewCount - 1);
+        } else {
+            this.averageRating = null;
+        }
         this.reviewCount--;
     }
 

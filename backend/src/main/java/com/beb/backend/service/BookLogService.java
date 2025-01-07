@@ -86,8 +86,7 @@ public class BookLogService {
         }
 
         commentRepository.findByMemberAndBookAndParentCommentIsNull(member, readBook.getBook())
-                .ifPresent(commentRepository::delete);
-        readBook.getBook().decrementReviewCount();
+                .ifPresent(review -> deleteReview(review.getId()));
         readBookRepository.delete(readBook);
     }
 
@@ -224,7 +223,7 @@ public class BookLogService {
                 request.isSpoiler(),
                 request.isPublic()
         ));
-        book.incrementReviewCount();
+        book.addRating(savedReview.getRating());
 
         if (!readBookRepository.existsByMemberAndBook(member, book)) {
             readBookRepository.save(ReadBook.builder().book(book).member(member).build());
@@ -272,7 +271,10 @@ public class BookLogService {
                 .filter(member -> member.getId().equals(review.getMember().getId()))
                 .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_FORBIDDEN));
 
-        if (request.rating() != null) review.setRating(request.rating());
+        if (request.rating() != null) {
+            review.getBook().updateRating(review.getRating(), request.rating());
+            review.setRating(request.rating());
+        }
         if (request.content() != null) review.setContent(request.content());
         if (request.isSpoiler() != null) review.setIsSpoiler(request.isSpoiler());
         if (request.isPublic() != null) review.setIsPublic(request.isPublic());
@@ -292,7 +294,7 @@ public class BookLogService {
                 .orElseThrow(() -> new BookException(BookExceptionInfo.BOOK_NOT_FOUND));
 
         commentRepository.delete(review);
-        book.decrementReviewCount();
+        book.removeRating(review.getRating());
     }
 
     /**
