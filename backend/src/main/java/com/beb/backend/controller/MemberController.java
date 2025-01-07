@@ -1,12 +1,12 @@
 package com.beb.backend.controller;
 
 import com.beb.backend.common.ValidationRegexConstants;
-import com.beb.backend.domain.Member;
 import com.beb.backend.dto.*;
 import com.beb.backend.exception.MemberException;
 import com.beb.backend.exception.MemberExceptionInfo;
 import com.beb.backend.service.MemberService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -124,12 +124,20 @@ public class MemberController {
      * 현재 인증된 사용자의 프로필 정보(비밀번호 제외) 반환
      */
     @GetMapping("/me")
-    public ResponseEntity<BaseResponseDto<ProfileResponseDto>> getCurrentUserProfile() {
-        Member member = memberService.getCurrentMember()
-                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
-
+    public ResponseEntity<BaseResponseDto<FullProfileDto>> getCurrentUserProfile() {
         return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.success(
-                memberService.getUserProfileById(member.getId()), new BaseResponseDto.Meta("프로필 조회 성공")
+                memberService.getCurrentUserProfile(), new BaseResponseDto.Meta("프로필 조회 성공")
+        ));
+    }
+
+    /**
+     * 입력된 userId와 일치하는 사용자의 프로필 정보 반환
+     * @param userId (Long) 프로필을 조회할 사용자 PK
+     */
+    @GetMapping("/{userId}")
+    public ResponseEntity<BaseResponseDto<ProfileResponseDto>> getUserProfile(@PathVariable @Min(value = 1) Long userId) {
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.success(
+                memberService.getUserProfile(userId), new BaseResponseDto.Meta("프로필 조회 성공")
         ));
     }
 

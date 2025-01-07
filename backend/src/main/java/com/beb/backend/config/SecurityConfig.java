@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/users/email-availability",
                                 "/api/v1/users/nickname-availability",
+                                "/api/v1/users/{userId:\\d+}",
                                 "/api/v1/books",
                                 "/api/v1/books/*",
                                 "/api/v1/books/*/reviews",

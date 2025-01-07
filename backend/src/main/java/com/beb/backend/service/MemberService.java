@@ -140,19 +140,44 @@ public class MemberService {
         // TODO: 로그아웃한 사용자의 액세스 토큰 저장 (추후 Redis 연결 시 추가)
     }
 
+    private FullProfileDto mapToFullProfileDto(Member member) {
+        return new FullProfileDto(
+                member.getEmail(),
+                member.getNickname(),
+                member.getAge(),
+                member.getGender(),
+                member.getProfileImgPath()
+        );
+    }
+
     /**
-     * 입력된 id(member_id)로 DB에 저장된 회원을 찾아 그 프로필 정보 (비밀번호 제외) 반환
-     * @param id (Long) 회원 PK
+     * 현재 인증된 유저의 프로필 정보 반환
+     * 비밀번호를 제외한 모든 정보(이메일, 닉네임, 나이, 성별, 프로필 사진)를 반환한다.
+     * @return (FullProfileDto)
+     */
+    public FullProfileDto getCurrentUserProfile() {
+        Member member = getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
+        return mapToFullProfileDto(member);
+    }
+
+    /**
+     * 입력된 userId와 일치하는 유저의 프로필 정보를 반환한다.
+     * 현재 인증된 유저와 같을 경우 비밀번호를 제외한 모든 정보를 반환하고,
+     * 그렇지 않을 경우 닉네임과 프로필 사진 정보만 반환한다.
+     * @param userId (Long)
      * @return (ProfileResponseDto)
      */
-    public ProfileResponseDto getUserProfileById(Long id) {
-        return memberRepository.findById(id)
-                .map(member -> new ProfileResponseDto(
-                        member.getEmail(),
+    public ProfileResponseDto getUserProfile(Long userId) {
+        Optional<Member> currentMember = getCurrentMember();
+        if (currentMember.isPresent() && currentMember.get().getId().equals(userId)) {
+            return mapToFullProfileDto(currentMember.get());
+        }
+        return memberRepository.findById(userId)
+                .map(member -> new PublicProfileDto(
                         member.getNickname(),
-                        member.getAge(),
-                        member.getGender(),
-                        member.getProfileImgPath()))
+                        member.getProfileImgPath()
+                ))
                 .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
     }
 
