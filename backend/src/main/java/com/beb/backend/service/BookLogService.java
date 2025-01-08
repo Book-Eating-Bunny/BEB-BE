@@ -30,12 +30,7 @@ public class BookLogService {
     private UserReadBookDto mapToUserReadBookDto(ReadBook readBook) {
         return new UserReadBookDto(
                 readBook.getId(),
-                new BookSummaryDto(
-                        readBook.getBook().getId(),
-                        readBook.getBook().getCoverImgUrl(),
-                        readBook.getBook().getTitle(),
-                        readBook.getBook().getAuthor()
-                ),
+                BookSummaryDto.fromEntity(readBook.getBook()),
                 readBook.getReadAt(),
                 readBook.getCreatedAt()
         );
@@ -106,12 +101,7 @@ public class BookLogService {
     private UserWishlistBookDto mapToUserWishlistBookDto(WishlistBook wishlistBook) {
         return new UserWishlistBookDto(
                 wishlistBook.getId(),
-                new BookSummaryDto(
-                        wishlistBook.getBook().getId(),
-                        wishlistBook.getBook().getCoverImgUrl(),
-                        wishlistBook.getBook().getTitle(),
-                        wishlistBook.getBook().getAuthor()
-                ),
+                BookSummaryDto.fromEntity(wishlistBook.getBook()),
                 wishlistBook.getCreatedAt()
         );
     }
@@ -179,12 +169,7 @@ public class BookLogService {
     private CurrentUserReviewDto mapToCurrentUserReviewDto(Comment review) {
         return new CurrentUserReviewDto(
                 review.getId(),
-                new BookSummaryDto(
-                        review.getBook().getId(),
-                        review.getBook().getCoverImgUrl(),
-                        review.getBook().getTitle(),
-                        review.getBook().getAuthor()
-                ),
+                BookSummaryDto.fromEntity(review.getBook()),
                 review.getRating(),
                 review.getContent(),
                 review.getCreatedAt(),
@@ -271,12 +256,7 @@ public class BookLogService {
 
         return new ReviewDetailsResponseDto(
                 review.getId(),
-                new BookSummaryDto(
-                        review.getBook().getId(),
-                        review.getBook().getCoverImgUrl(),
-                        review.getBook().getTitle(),
-                        review.getBook().getAuthor()
-                ),
+                BookSummaryDto.fromEntity(review.getBook()),
                 new MemberSummaryDto(
                         review.getMember().getId(),
                         review.getMember().getNickname()
