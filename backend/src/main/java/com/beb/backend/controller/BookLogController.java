@@ -89,15 +89,22 @@ public class BookLogController {
     }
 
     @GetMapping("/users/me/reviews")
-    public ResponseEntity<BaseResponseDto<ReviewsResponseDto<CurrentUserReviewDto>>> getCurrentUserReviews(
-            @RequestParam(defaultValue = "1") @Min(value = 1) int page,
-            @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
-        Member member = memberService.getCurrentMember()
-                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
+    public ResponseEntity<BaseResponseDto<ReviewsResponseDto<UserReviewDto>>>
+    getCurrentUserReviews(@RequestParam(defaultValue = "1") @Min(value = 1) int page,
+                          @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
+
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
-        return ResponseEntity.status(HttpStatus.OK).body(
-                bookLogService.getUserReviewsById(member.getId(), pageable)
-        );
+        return ResponseEntity.status(HttpStatus.OK).body(bookLogService.getCurrentUserReviews(pageable));
+    }
+
+    @GetMapping("/users/{userId}/reviews")
+    public ResponseEntity<BaseResponseDto<ReviewsResponseDto<UserReviewDto>>>
+    getUserReviews(@PathVariable @Min(value = 1) Long userId,
+                   @RequestParam(defaultValue = "1") @Min(value = 1) int page,
+                   @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
+
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        return ResponseEntity.status(HttpStatus.OK).body(bookLogService.getUserReviews(userId, pageable));
     }
 
     @GetMapping("/books/{bookId}/reviews")

@@ -107,8 +107,8 @@ public class BookLogService {
     }
 
     private BaseResponseDto<WishlistBooksResponseDto<UserWishlistBookDto>>
-    getWishlistBooksForMember(Member memberId, Pageable pageable) {
-        Page<WishlistBook> wishlistBookPage = wishlistBookRepository.findByMember(memberId, pageable);
+    getWishlistBooksForMember(Member member, Pageable pageable) {
+        Page<WishlistBook> wishlistBookPage = wishlistBookRepository.findByMember(member, pageable);
         List<UserWishlistBookDto> wishlistBooks = wishlistBookPage.getContent().stream()
                 .map(this::mapToUserWishlistBookDto).toList();
 
@@ -166,27 +166,46 @@ public class BookLogService {
         wishlistBookRepository.delete(wishlistBook);
     }
 
-    private CurrentUserReviewDto mapToCurrentUserReviewDto(Comment review) {
-        return new CurrentUserReviewDto(
+    private UserReviewDto mapToUserReviewDto(Comment review, boolean isCurrentUser) {
+        return new UserReviewDto(
                 review.getId(),
                 BookSummaryDto.fromEntity(review.getBook()),
                 review.getRating(),
                 review.getContent(),
                 review.getCreatedAt(),
-                review.getUpdatedAt()
+                review.getUpdatedAt(),
+                isCurrentUser ? null : review.getIsSpoiler()
         );
     }
 
-    @Transactional
-    public BaseResponseDto<ReviewsResponseDto<CurrentUserReviewDto>> getUserReviewsById(Long memberId, Pageable pageable) {
-        Page<Comment> reviewsPage = commentRepository.findReviewsByMemberId(memberId, pageable);
-        List<CurrentUserReviewDto> reviews = reviewsPage.getContent().stream()
-                .map(this::mapToCurrentUserReviewDto).toList();
+    private BaseResponseDto<ReviewsResponseDto<UserReviewDto>>
+    getReviewsByMember(Member member, Pageable pageable, boolean isCurrentUser) {
+        Page<Comment> reviewsPage = isCurrentUser ? commentRepository.findReviewsByMember(member, pageable)
+                : commentRepository.findPublicReviewsByMember(member, pageable);
+        List<UserReviewDto> reviews = reviewsPage.getContent().stream()
+                .map(review -> mapToUserReviewDto(review, isCurrentUser)).toList();
 
         BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
                 reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements(),
                 "조회 성공");
         return BaseResponseDto.success(new ReviewsResponseDto<>(reviews), meta);
+    }
+
+    @Transactional
+    public BaseResponseDto<ReviewsResponseDto<UserReviewDto>> getCurrentUserReviews(Pageable pageable) {
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
+        return getReviewsByMember(member, pageable, true);
+    }
+
+    @Transactional
+    public BaseResponseDto<ReviewsResponseDto<UserReviewDto>> getUserReviews(Long memberId, Pageable pageable) {
+        Member member = memberService.getMemberById(memberId)
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
+        boolean isCurrentUser = memberService.getCurrentMember()
+                .map(currentMember -> currentMember.getId().equals(member.getId()))
+                .orElse(false);
+        return getReviewsByMember(member, pageable, isCurrentUser);
     }
 
     private BookReviewDto mapToBookReviewDto(Comment review) {

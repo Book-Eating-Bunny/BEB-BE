@@ -14,8 +14,11 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     // 특정 Member가 작성한 리뷰 조회
-    @Query("SELECT c from Comment c WHERE c.member.id = :memberId AND c.parentComment IS NULL")
-    Page<Comment> findReviewsByMemberId(@Param("memberId") Long memberId, Pageable pageable);
+    @Query("SELECT c FROM Comment c WHERE c.member = :member AND c.parentComment IS NULL")
+    Page<Comment> findReviewsByMember(@Param("member") Member member, Pageable pageable);
+
+    @Query("SELECT c FROM Comment c WHERE c.member = :member AND c.parentComment IS NULL AND c.isPublic IS TRUE ")
+    Page<Comment> findPublicReviewsByMember(@Param("member") Member member, Pageable pageable);
 
     // 특정 Book에 대한 리뷰 조회 (페이징 적용)
     @Query("SELECT c FROM Comment c WHERE c.book.id = :bookId AND c.parentComment IS NULL AND c.isPublic IS TRUE")

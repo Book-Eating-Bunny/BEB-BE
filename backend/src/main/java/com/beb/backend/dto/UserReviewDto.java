@@ -1,12 +1,15 @@
 package com.beb.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.time.LocalDateTime;
 
-public record CurrentUserReviewDto(
+public record UserReviewDto(
         Long reviewId,
         BookSummaryDto book,
         Integer rating,
         String content,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        @JsonInclude(JsonInclude.Include.NON_NULL) Boolean isSpoiler
 ) { }
