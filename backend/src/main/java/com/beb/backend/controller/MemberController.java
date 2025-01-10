@@ -4,6 +4,7 @@ import com.beb.backend.common.ValidationRegexConstants;
 import com.beb.backend.dto.*;
 import com.beb.backend.exception.MemberException;
 import com.beb.backend.exception.MemberExceptionInfo;
+import com.beb.backend.service.AwsS3Service;
 import com.beb.backend.service.MemberService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
+    private final AwsS3Service awsS3Service;
 
     /**
      * 입력된 정보로 회원을 생성하고 액세스 토큰과 리프레시 토큰을 반환
@@ -149,5 +152,23 @@ public class MemberController {
     public ResponseEntity<BaseResponseDto<Void>> updateUserProfile(@RequestBody @Valid UpdateProfileRequestDto request) {
         memberService.updateUserProfile(request);
         return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("프로필 수정 성공"));
+    }
+
+    @PostMapping("/img")
+    public ResponseEntity<BaseResponseDto<Void>> tempUploadImg(@RequestPart("profileImg")MultipartFile profileImg) {
+
+        String bucketName = "test-beb-bucket-01";
+        String key = "temp/" + profileImg.getOriginalFilename();
+
+        awsS3Service.uploadFile(bucketName, key, profileImg);
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("파일 업로드 성공"));
+    }
+
+    @DeleteMapping("/img")
+    public ResponseEntity<BaseResponseDto<Void>> tempDeleteImg(@RequestParam String fileUrl) {
+
+        String bucketName = "test-beb-bucket-01";
+        awsS3Service.deleteFile(bucketName, fileUrl);
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("파일 삭제 성공"));
     }
 }

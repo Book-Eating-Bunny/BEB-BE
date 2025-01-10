@@ -46,6 +46,10 @@ public class SecurityConfig {
                                 "/api/v1/books/*/reviews",
                                 "/api/v1/books/isbn/*",
                                 "/api/v1/reviews/{reviewId:\\d+}").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/users/img").permitAll()
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/v1/users/img").permitAll()
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
