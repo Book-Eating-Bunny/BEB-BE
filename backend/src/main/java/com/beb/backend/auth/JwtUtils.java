@@ -15,7 +15,8 @@ import java.util.Date;
 public class JwtUtils {     // 토큰 생성, 유효성 검사
     private static final String ISSUER = "Book-Eating-Bunny";
 
-    private static final Long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60L * 60L * 2L;         // 2시간
+//    private static final Long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60L * 60L * 2L;         // 2시간
+    private static final Long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60L * 60L * 24L * 60L;  // 60일(임시)
     private static final Long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60L * 60L * 24L * 7L;  // 7일
 
     private final SecretKey secretKey;
