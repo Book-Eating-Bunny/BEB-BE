@@ -256,6 +256,23 @@ public class BookLogService {
         );
     }
 
+    public BaseResponseDto<ReviewsResponseDto<ReviewDetailsDto>>
+    getAllReviews(Pageable pageable) {
+
+        Page<Comment> reviewsPage = memberService.getCurrentMember()
+                .map(member -> commentRepository.findAllVisibleReviewsByMemberId(member.getId(), pageable))
+                .orElseGet(() -> commentRepository.findAllPublicReviews(pageable));
+
+        List<ReviewDetailsDto> reviews = reviewsPage.getContent().stream()
+                .map(this::mapToReviewDetailsDto).toList();
+
+        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
+                reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements(),
+                "조회 성공"
+        );
+        return BaseResponseDto.success(new ReviewsResponseDto<>(reviews), meta);
+    }
+
     @Transactional
     public CreateReviewResponseDto createReview(CreateReviewRequestDto request) {
         Member member = memberService.getCurrentMember()

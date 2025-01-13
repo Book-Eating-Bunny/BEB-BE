@@ -1,9 +1,6 @@
 package com.beb.backend.controller;
 
-import com.beb.backend.domain.Member;
 import com.beb.backend.dto.*;
-import com.beb.backend.exception.MemberException;
-import com.beb.backend.exception.MemberExceptionInfo;
 import com.beb.backend.service.BookLogService;
 import com.beb.backend.service.MemberService;
 import jakarta.validation.Valid;
@@ -118,6 +115,16 @@ public class BookLogController {
         );
     }
 
+    @GetMapping("/reviews")
+    public ResponseEntity<BaseResponseDto<ReviewsResponseDto<ReviewDetailsDto>>>
+    getAllReviews(@RequestParam(defaultValue = "1") @Min(value = 1) int page,
+                  @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        return ResponseEntity.status(HttpStatus.OK).body(
+                bookLogService.getAllReviews(pageable)
+        );
+    }
+
     @PostMapping("/reviews")
     public ResponseEntity<BaseResponseDto<CreateReviewResponseDto>>
     createReview(@RequestBody @Valid CreateReviewRequestDto request) {
@@ -128,7 +135,7 @@ public class BookLogController {
     }
 
     @GetMapping("/reviews/{reviewId}")
-    public ResponseEntity<BaseResponseDto<ReviewDetailsResponseDto>>
+    public ResponseEntity<BaseResponseDto<ReviewDetailsDto>>
     getReviewDetails(@PathVariable @Min(value = 1) Long reviewId) {
         return ResponseEntity.status(HttpStatus.OK).body(
                 BaseResponseDto.success(bookLogService.getReviewDetails(reviewId),
