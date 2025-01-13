@@ -228,7 +228,7 @@ public class BookLogService {
         if (!bookRepository.existsById(bookId)) throw new BookException(BookExceptionInfo.BOOK_NOT_FOUND);
 
         Page<Comment> reviewsPage = memberService.getCurrentMember()
-                .map(member -> commentRepository.findPublicReviewsByBookIdAndMemberId(bookId, member.getId(), pageable))
+                .map(member -> commentRepository.findVisibleReviewsByBookIdAndMemberId(bookId, member.getId(), pageable))
                 .orElseGet(() -> commentRepository.findPublicReviewsByBookId(bookId, pageable));
 
         List<BookReviewDto> reviews = reviewsPage.getContent().stream()
@@ -238,6 +238,22 @@ public class BookLogService {
                 reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements(),
                 "조회 성공");
         return BaseResponseDto.success(new ReviewsResponseDto<>(reviews), meta);
+    }
+
+    private ReviewDetailsDto mapToReviewDetailsDto(Comment review) {
+        return new ReviewDetailsDto(
+                review.getId(),
+                BookSummaryDto.fromEntity(review.getBook()),
+                new MemberSummaryDto(
+                        review.getMember().getId(),
+                        review.getMember().getNickname()
+                ),
+                review.getRating(),
+                review.getContent(),
+                review.getIsSpoiler(),
+                review.getCreatedAt(),
+                review.getUpdatedAt()
+        );
     }
 
     @Transactional
@@ -263,7 +279,7 @@ public class BookLogService {
     }
 
     @Transactional
-    public ReviewDetailsResponseDto getReviewDetails(Long reviewId) {
+    public ReviewDetailsDto getReviewDetails(Long reviewId) {
         Comment review = commentRepository.findById(reviewId)
                 .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
 
@@ -273,19 +289,7 @@ public class BookLogService {
                     .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_PUBLIC));
         }
 
-        return new ReviewDetailsResponseDto(
-                review.getId(),
-                BookSummaryDto.fromEntity(review.getBook()),
-                new MemberSummaryDto(
-                        review.getMember().getId(),
-                        review.getMember().getNickname()
-                ),
-                review.getRating(),
-                review.getContent(),
-                review.getIsSpoiler(),
-                review.getCreatedAt(),
-                review.getUpdatedAt()
-        );
+        return mapToReviewDetailsDto(review);
     }
 
     @Transactional

@@ -27,6 +27,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("SELECT c FROM Comment c " +
             "WHERE c.book.id = :bookId AND c.parentComment IS NULL AND (c.isPublic IS TRUE OR c.member.id = :memberId)")
     Page<Comment> findPublicReviewsByBookIdAndMemberId(@Param("bookId") Long bookId, @Param("memberId") Long memberId, Pageable pageable);
+    Page<Comment> findVisibleReviewsByBookIdAndMemberId(@Param("bookId") Long bookId, @Param("memberId") Long memberId, Pageable pageable);
 
     // 특정 리뷰에 달린 댓글 조회
     @Query("SELECT c FROM Comment c WHERE c.parentComment.id = :reviewId")

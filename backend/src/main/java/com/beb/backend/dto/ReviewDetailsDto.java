@@ -2,7 +2,7 @@ package com.beb.backend.dto;
 
 import java.time.LocalDateTime;
 
-public record ReviewDetailsResponseDto(
+public record ReviewDetailsDto(
         Long reviewId,
         BookSummaryDto book,
         MemberSummaryDto user,
