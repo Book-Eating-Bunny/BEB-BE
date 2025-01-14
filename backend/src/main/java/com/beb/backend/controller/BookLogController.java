@@ -168,4 +168,12 @@ public class BookLogController {
                 BaseResponseDto.emptySuccess("리뷰 좋아요 추가")
         );
     }
+
+    @DeleteMapping("/reviews/{reviewId}/likes")
+    public ResponseEntity<BaseResponseDto<Void>> deleteReviewLike(@PathVariable @Min(value = 1) Long reviewId) {
+        bookLogService.deleteReviewLike(reviewId);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                BaseResponseDto.emptySuccess("리뷰 좋아요 취소")
+        );
+    }
 }

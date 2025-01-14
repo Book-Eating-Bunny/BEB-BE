@@ -357,6 +357,20 @@ public class BookLogService {
         review.incrementLikeCount();
     }
 
+    @Transactional
+    public void deleteReviewLike(Long reviewId) {
+        Comment review = commentRepository.findReviewById(reviewId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
+
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
+
+        ReviewLike reviewLike = reviewLikeRepository.findByMemberIdAndReviewId(member.getId(), reviewId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_LIKE_NOT_FOUND));
+        reviewLikeRepository.delete(reviewLike);
+        review.decrementLikeCount();
+    }
+
     /**
      * 현재 사용자가 입력된 책을 찜한 책으로 등록했는지, 읽은 책으로 등록했는지, 책에 대한 리뷰를 작성했는지에 대한 정보를 반환
      * 인증되지 않은 사용자는 빈 Optional로 반환
