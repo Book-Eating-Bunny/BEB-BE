@@ -54,6 +54,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
     }
 
+    @ExceptionHandler(CommentException.class)
+    public ResponseEntity<BaseResponseDto<Void>> handleCommentExceptions(CommentException e) {
+        CommentExceptionInfo info = e.getInfo();
+        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
+    }
+
     @ExceptionHandler(OpenApiException.class)
     public ResponseEntity<BaseResponseDto<Void>> handleOpenApiExceptions(OpenApiException e) {
         OpenApiExceptionInfo info = e.getInfo();
