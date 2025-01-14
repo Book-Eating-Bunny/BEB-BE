@@ -3,10 +3,7 @@ package com.beb.backend.service;
 import com.beb.backend.domain.*;
 import com.beb.backend.dto.*;
 import com.beb.backend.exception.*;
-import com.beb.backend.repository.BookRepository;
-import com.beb.backend.repository.CommentRepository;
-import com.beb.backend.repository.ReadBookRepository;
-import com.beb.backend.repository.WishlistBookRepository;
+import com.beb.backend.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +22,7 @@ public class BookLogService {
     private final ReadBookRepository readBookRepository;
     private final WishlistBookRepository wishlistBookRepository;
     private final CommentRepository commentRepository;
+    private final ReviewLikeRepository reviewLikeRepository;
 
 
     private UserReadBookDto mapToUserReadBookDto(ReadBook readBook) {
@@ -342,6 +340,21 @@ public class BookLogService {
 
         commentRepository.delete(review);
         book.removeRating(review.getRating());
+    }
+
+    @Transactional
+    public void createReviewLike(Long reviewId) {
+        Comment review = commentRepository.findReviewById(reviewId)
+                .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
+
+        Member member = memberService.getCurrentMember()
+                .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
+
+        if (reviewLikeRepository.existsByMemberIdAndCommentId(member.getId(), review.getId())) {
+            throw new BookLogException(BookLogExceptionInfo.REVIEW_LIKE_ALREADY_EXISTS);
+        }
+        reviewLikeRepository.save(ReviewLike.builder().member(member).comment(review).build());
+        review.incrementLikeCount();
     }
 
     /**

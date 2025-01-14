@@ -160,4 +160,12 @@ public class BookLogController {
                 BaseResponseDto.emptySuccess("리뷰 삭제 성공")
         );
     }
+
+    @PostMapping("/reviews/{reviewId}/likes")
+    public ResponseEntity<BaseResponseDto<Void>> createReviewLike(@PathVariable @Min(value = 1) Long reviewId) {
+        bookLogService.createReviewLike(reviewId);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                BaseResponseDto.emptySuccess("리뷰 좋아요 추가")
+        );
+    }
 }

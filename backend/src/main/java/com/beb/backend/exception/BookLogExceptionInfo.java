@@ -14,7 +14,8 @@ public enum BookLogExceptionInfo {
     WISHLIST_BOOK_FORBIDDEN(HttpStatus.FORBIDDEN, "찜한 책 기록에 대한 권한 없음"),
     REVIEW_NOT_PUBLIC(HttpStatus.FORBIDDEN, "비공개 설정된 리뷰"),
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 리뷰가 존재하지 않음"),
-    REVIEW_FORBIDDEN(HttpStatus.FORBIDDEN, "리뷰에 대한 권한 없음");
+    REVIEW_FORBIDDEN(HttpStatus.FORBIDDEN, "리뷰에 대한 권한 없음"),
+    REVIEW_LIKE_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 좋아요한 리뷰");
 
     private final HttpStatus status;
     private final String message;
