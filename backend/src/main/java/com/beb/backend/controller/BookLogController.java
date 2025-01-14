@@ -2,7 +2,6 @@ package com.beb.backend.controller;
 
 import com.beb.backend.dto.*;
 import com.beb.backend.service.BookLogService;
-import com.beb.backend.service.MemberService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class BookLogController {
     private final BookLogService bookLogService;
-    private final MemberService memberService;
 
     @GetMapping("/users/me/read-books")
     public ResponseEntity<BaseResponseDto<ReadBooksResponseDto<UserReadBookDto>>>
