@@ -73,4 +73,14 @@ public class CommentService {
         comment.setContent(request.content());
         comment.setUpdatedAt(LocalDateTime.now());
     }
+
+    @Transactional
+    public void deleteComment(Long commentId) {
+        Comment comment = commentRepository.findCommentById(commentId)
+                .orElseThrow(() -> new CommentException(CommentExceptionInfo.COMMENT_NOT_FOUND));
+        memberService.getCurrentMember()
+                .filter(member -> member.getId().equals(comment.getMember().getId()))
+                .orElseThrow(() -> new CommentException(CommentExceptionInfo.COMMENT_FORBIDDEN));
+        commentRepository.delete(comment);
+    }
 }

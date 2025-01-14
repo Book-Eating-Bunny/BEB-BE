@@ -52,4 +52,13 @@ public class CommentController {
                 BaseResponseDto.emptySuccess("댓글 수정 성공")
         );
     }
+
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<BaseResponseDto<Void>>
+    deleteComment(@PathVariable @Min(value = 1) Long commentId) {
+        commentService.deleteComment(commentId);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                BaseResponseDto.emptySuccess("댓글 삭제 성공")
+        );
+    }
 }
