@@ -42,4 +42,14 @@ public class CommentController {
                 new BaseResponseDto.Meta("댓글 생성 성공"))
         );
     }
+
+    @PutMapping("/comments/{commentId}")
+    public ResponseEntity<BaseResponseDto<Void>>
+    updateComment(@PathVariable @Min(value = 1) Long commentId,
+                  @RequestBody @Valid CommentContentDto request) {
+        commentService.updateComment(commentId, request);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                BaseResponseDto.emptySuccess("댓글 수정 성공")
+        );
+    }
 }
