@@ -1,9 +1,11 @@
 package com.beb.backend.domain;
 
+import com.beb.backend.common.ValidationRegexConstants;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -43,7 +45,9 @@ public class Book {
     @Column(name = "published_date")
     private LocalDate publishedDate;
 
-    @Column(name = "isbn", unique = true)
+    @NotNull
+    @Pattern(regexp = ValidationRegexConstants.ISBN_REGEX)
+    @Column(name = "isbn", unique = true, nullable = false)
     private String isbn;
 
     @ManyToOne(fetch = FetchType.LAZY)

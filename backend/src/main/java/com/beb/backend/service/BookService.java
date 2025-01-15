@@ -1,5 +1,6 @@
 package com.beb.backend.service;
 
+import com.beb.backend.common.ValidationRegexConstants;
 import com.beb.backend.domain.Book;
 import com.beb.backend.domain.Category;
 import com.beb.backend.dto.*;
@@ -228,9 +229,9 @@ public class BookService {
      * @param aladinBookItems 알라딘 상품 리스트
      */
     private List<Book> filterNonExistingBooks(List<AladinBookItemDto> aladinBookItems) {
-        // 입력 리스트에서 중복된 ISBN 제거
+        // 입력 리스트에서 ISBN 형식 안 맞는 것, 중복된 ISBN 제거
         Map<String, AladinBookItemDto> uniqueItems = aladinBookItems.stream()
-                .filter(item -> item.isbn13() != null && !item.isbn13().isBlank())
+                .filter(item -> item.isbn13() != null && !item.isbn13().matches(ValidationRegexConstants.ISBN_REGEX))
                 .collect(Collectors.toMap(AladinBookItemDto::isbn13,
                         item -> item,
                         (existing, replacement) -> existing // 중복 시 첫 번째 데이터 유지
