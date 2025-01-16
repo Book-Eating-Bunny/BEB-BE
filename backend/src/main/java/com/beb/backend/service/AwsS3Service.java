@@ -23,40 +23,26 @@ public class AwsS3Service {
                     .key(filePath)
                     .contentType(multipartFile.getContentType())
                     .build();
-
             RequestBody requestBody = RequestBody.fromInputStream(multipartFile.getInputStream(), multipartFile.getSize());
 
             awsS3Client.putObject(putObjectRequest, requestBody);
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            throw new AwsS3Exception(AwsS3ExceptionInfo.FILE_UPLOAD_FAILED);
+            throw new AwsS3Exception(AwsS3ExceptionInfo.S3_FILE_UPLOAD_FAILED);
         }
     }
 
-    private String extractKeyFromUrl(String bucketName, String fileUrl) {
-        // 버킷 URL 구성
-        String bucketUrl = "https://" + bucketName + ".s3.ap-northeast-2.amazonaws.com/";
-
-        // URL에서 Key 추출
-        if (fileUrl.startsWith(bucketUrl)) {
-            return fileUrl.substring(bucketUrl.length());
-        } else {
-            throw new IllegalArgumentException("URL does not belong to the bucket: " + bucketName);
-        }
-    }
-
-    public void deleteFile(String bucketName, String fileUrl) {
+    public void deleteFile(String bucketName, String filePath) {
         try {
-            String key = extractKeyFromUrl(bucketName, fileUrl);
             DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                     .bucket(bucketName)
-                    .key(key)
+                    .key(filePath)
                     .build();
 
             awsS3Client.deleteObject(deleteObjectRequest);
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            throw new AwsS3Exception(AwsS3ExceptionInfo.FILE_DELETE_FAILED);
+            throw new AwsS3Exception(AwsS3ExceptionInfo.S3_FILE_DELETE_FAILED);
         }
     }
 }
