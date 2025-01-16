@@ -28,15 +28,17 @@ public class MemberController {
 
     /**
      * 입력된 정보로 회원을 생성하고 액세스 토큰과 리프레시 토큰을 반환
-     * @param request (MemberSignUpRequestDto)
+     * @param request (SignUpRequestDto) 가입할 회원 정보
+     * @param profileImg (MultipartFile) 프로필 이미지 파일
      */
     @PostMapping("/signup")
     public ResponseEntity<BaseResponseDto<TokenResponseDto>> signUp(
-            @RequestBody @Valid SignUpRequestDto request) {
-        TokenResponseDto tokenResponse = memberService.signUp(request);
-        BaseResponseDto<TokenResponseDto> response = BaseResponseDto.success(
-                tokenResponse, new BaseResponseDto.Meta("회원 가입 성공"));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            @RequestPart("userInfo") @Valid SignUpRequestDto request,
+            @RequestPart(value = "profileImg", required = false) MultipartFile profileImg) {
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponseDto.success(
+                memberService.signUp(request, profileImg), new BaseResponseDto.Meta("회원 가입 성공"))
+        );
     }
 
     /**
@@ -152,23 +154,5 @@ public class MemberController {
     public ResponseEntity<BaseResponseDto<Void>> updateUserProfile(@RequestBody @Valid UpdateProfileRequestDto request) {
         memberService.updateUserProfile(request);
         return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("프로필 수정 성공"));
-    }
-
-    @PostMapping("/img")
-    public ResponseEntity<BaseResponseDto<Void>> tempUploadImg(@RequestPart("profileImg")MultipartFile profileImg) {
-
-        String bucketName = "test-beb-bucket-01";
-        String key = "temp/" + profileImg.getOriginalFilename();
-
-        awsS3Service.uploadFile(bucketName, key, profileImg);
-        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("파일 업로드 성공"));
-    }
-
-    @DeleteMapping("/img")
-    public ResponseEntity<BaseResponseDto<Void>> tempDeleteImg(@RequestParam String fileUrl) {
-
-        String bucketName = "test-beb-bucket-01";
-        awsS3Service.deleteFile(bucketName, fileUrl);
-        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("파일 삭제 성공"));
     }
 }

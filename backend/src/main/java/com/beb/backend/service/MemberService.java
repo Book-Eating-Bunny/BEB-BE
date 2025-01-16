@@ -17,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -29,28 +30,36 @@ public class MemberService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ProfileImgService profileImgService;
 
     /**
      * 입력된 회원 정보로 회원을 생성하고 액세스 토큰과 리프레시 토큰 반환
-     * @param request (MemberSignUpRequestDto)
+     * @param request (SignUpRequestDto) 회원 정보
+     * @param profileImg (MultipartFile) 프로필 이미지
      * @return (TokenResponseDto)
      */
     @Transactional
-    public TokenResponseDto signUp(SignUpRequestDto request) {
+    public TokenResponseDto signUp(SignUpRequestDto request, MultipartFile profileImg) {
         if (isEmailDuplicated(request.email())) throw new MemberException(MemberExceptionInfo.DUPLICATE_EMAIL);
         if (isNicknameDuplicated(request.nickname())) throw new MemberException(MemberExceptionInfo.DUPLICATE_NICKNAME);
 
         String encodedPassword = passwordEncoder.encode(request.password());
-        // 회원 생성
+        // 회원 생성하여 저장
         Member member = Member.builder()
                 .email(request.email())
                 .password(encodedPassword)
                 .nickname(request.nickname())
                 .age(request.age())
-                .gender(request.gender())
-                .profileImgPath(request.profileImgPath()).build();
-        // 회원 저장
+                .gender(request.gender()).build();
         Member savedMember = memberRepository.save(member);
+
+        // 프로필 사진 저장
+        if (profileImg == null || profileImg.isEmpty()) {   // 기본 이미지로 설정
+            savedMember.setProfileImgKey(ProfileImgService.DEFAULT_PROFILE_IMG_KEY);
+        } else {    // 이미지 저장 후 Key 저장
+            savedMember.setProfileImgKey(profileImgService.uploadProfileImage(profileImg, savedMember.getId()));
+        }
+
         // 토큰 발급
         String accessToken = jwtUtils.createAccessToken(savedMember.getEmail());
         String refreshToken = jwtUtils.createRefreshToken(savedMember.getEmail());

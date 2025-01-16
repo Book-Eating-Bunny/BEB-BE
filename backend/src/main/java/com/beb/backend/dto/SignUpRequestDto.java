@@ -29,7 +29,5 @@ public record SignUpRequestDto(
         Integer age,
 
         @NotNull @Enumerated(EnumType.STRING)
-        Member.Gender gender,
-
-        String profileImgPath
+        Member.Gender gender
 ) { }
