@@ -67,7 +67,8 @@ public class ProfileImgService {
         return profileImgKey;   // profileImgKey를 Member에 저장. 프론트 측에 제공할 때에는 URL로 바꿔서 제공
     }
 
-    public void deleteProfileImage(String profileImgKey) {
+    public String deleteProfileImage(String profileImgKey) {
         awsS3Service.deleteFile(BUCKET_NAME, profileImgKey);
+        return DEFAULT_PROFILE_IMG_KEY;
     }
 }

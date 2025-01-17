@@ -7,6 +7,8 @@ import com.beb.backend.domain.RefreshToken;
 import com.beb.backend.dto.*;
 import com.beb.backend.exception.MemberException;
 import com.beb.backend.exception.MemberExceptionInfo;
+import com.beb.backend.exception.ProfileImgException;
+import com.beb.backend.exception.ProfileImgExceptionInfo;
 import com.beb.backend.repository.MemberRepository;
 import com.beb.backend.repository.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
@@ -192,22 +194,39 @@ public class MemberService {
 
     /**
      * 현재 인증된 사용자 프로필을 입력된 정보로 수정 (비밀번호, 닉네임, 나이, 성별, 프로필 사진 수정 가능)
-     * @param request (UpdateProfileRequestDto)
+     * @param userInfo (UpdateProfileRequestDto) 수정할 회원 정보
+     * @param profileImg (MultipartFile) 프로필 사진 파일
      */
     @Transactional
-    public void updateUserProfile(UpdateProfileRequestDto request) {
+    public void updateUserProfile(UpdateProfileRequestDto userInfo, MultipartFile profileImg) {
         Member member = getCurrentMember().orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
 
-        if (request.nickname() != null && !request.nickname().equals(member.getNickname())) {
-            if (isNicknameDuplicated(request.nickname())) {
+        if (profileImg != null) {
+            if (userInfo.profileImgAction() == null || userInfo.profileImgAction().equalsIgnoreCase("DELETE")) {
+                // profileImgAction이 null(기존 사진 유지)이거나 '삭제'일 경우, profileImg 첨부 불가
+                throw new ProfileImgException(ProfileImgExceptionInfo.UPDATE_PROFILE_IMG_BAD_REQUEST);
+            }
+        }
+
+        if (userInfo.nickname() != null && !userInfo.nickname().equals(member.getNickname())) {
+            if (isNicknameDuplicated(userInfo.nickname())) {
                 throw new MemberException(MemberExceptionInfo.DUPLICATE_NICKNAME);
             }
-            member.setNickname(request.nickname());
+            member.setNickname(userInfo.nickname());
         }
-        if (request.password() != null) member.setPassword(passwordEncoder.encode(request.password()));
-        if (request.age() != null) member.setAge(request.age());
-        if (request.gender() != null) member.setGender(request.gender());
-        if (request.profileImgPath() != null) member.setProfileImgPath(request.profileImgPath());
+        if (userInfo.password() != null) member.setPassword(passwordEncoder.encode(userInfo.password()));
+        if (userInfo.age() != null) member.setAge(userInfo.age());
+        if (userInfo.gender() != null) member.setGender(userInfo.gender());
+
+        // 프로필 사진 수정
+        if (userInfo.profileImgAction() != null) {
+            if (userInfo.profileImgAction().equalsIgnoreCase("UPDATE")) {
+                member.setProfileImgKey(profileImgService.uploadProfileImage(profileImg, member.getId()));
+            } else {
+                // profileImgAction이 '삭제'일 경우 S3에 저장된 이미지 삭제하고 기본 이미지로 설정
+                member.setProfileImgKey(profileImgService.deleteProfileImage(member.getProfileImgKey()));
+            }
+        }
     }
 
     public Optional<Member> getCurrentMember() {

@@ -4,7 +4,6 @@ import com.beb.backend.common.ValidationRegexConstants;
 import com.beb.backend.dto.*;
 import com.beb.backend.exception.MemberException;
 import com.beb.backend.exception.MemberExceptionInfo;
-import com.beb.backend.service.AwsS3Service;
 import com.beb.backend.service.MemberService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -24,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class MemberController {
 
     private final MemberService memberService;
-    private final AwsS3Service awsS3Service;
 
     /**
      * 입력된 정보로 회원을 생성하고 액세스 토큰과 리프레시 토큰을 반환
@@ -148,11 +146,15 @@ public class MemberController {
 
     /**
      * 현재 인증된 사용자의 프로필 정보를 입력 받은 정보로 수정. 입력된 항목만 수정한다.
-     * @param request (UpdateProfileRequestDto)
+     * @param userInfo (UpdateProfileRequestDto) 수정할 회원 정보
+     * @param profileImg (MultipartFile) 프로필 사진 파일
      */
     @PutMapping("/me")
-    public ResponseEntity<BaseResponseDto<Void>> updateUserProfile(@RequestBody @Valid UpdateProfileRequestDto request) {
-        memberService.updateUserProfile(request);
+    public ResponseEntity<BaseResponseDto<Void>> updateUserProfile(
+            @RequestPart("userInfo") @Valid UpdateProfileRequestDto userInfo,
+            @RequestPart(value = "profileImg", required = false) MultipartFile profileImg) {
+
+        memberService.updateUserProfile(userInfo, profileImg);
         return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("프로필 수정 성공"));
     }
 }
