@@ -19,7 +19,7 @@ public class ProfileImgService {
     private String REGION;
 
     private static final List<String> ALLOWED_EXTENSIONS = List.of(".jpg", ".jpeg", ".png");
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final long MAX_FILE_SIZE = 1024 * 1024;  // 1MB
     private static final String BUCKET_NAME = "test-beb-bucket-01";
 
     public static final String DEFAULT_PROFILE_IMG_KEY = "profile-images/default";

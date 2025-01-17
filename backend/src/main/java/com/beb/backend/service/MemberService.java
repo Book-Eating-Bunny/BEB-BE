@@ -157,7 +157,7 @@ public class MemberService {
                 member.getNickname(),
                 member.getAge(),
                 member.getGender(),
-                member.getProfileImgPath()
+                profileImgService.generateProfileImgUrl(member.getProfileImgKey())
         );
     }
 
@@ -187,7 +187,7 @@ public class MemberService {
         return memberRepository.findById(userId)
                 .map(member -> new PublicProfileDto(
                         member.getNickname(),
-                        member.getProfileImgPath()
+                        profileImgService.generateProfileImgUrl(member.getProfileImgKey())
                 ))
                 .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
     }
