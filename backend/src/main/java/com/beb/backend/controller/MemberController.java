@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,15 +26,17 @@ public class MemberController {
 
     /**
      * 입력된 정보로 회원을 생성하고 액세스 토큰과 리프레시 토큰을 반환
-     * @param request (MemberSignUpRequestDto)
+     * @param request (SignUpRequestDto) 가입할 회원 정보
+     * @param profileImg (MultipartFile) 프로필 이미지 파일
      */
     @PostMapping("/signup")
     public ResponseEntity<BaseResponseDto<TokenResponseDto>> signUp(
-            @RequestBody @Valid SignUpRequestDto request) {
-        TokenResponseDto tokenResponse = memberService.signUp(request);
-        BaseResponseDto<TokenResponseDto> response = BaseResponseDto.success(
-                tokenResponse, new BaseResponseDto.Meta("회원 가입 성공"));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            @RequestPart("userInfo") @Valid SignUpRequestDto request,
+            @RequestPart(value = "profileImg", required = false) MultipartFile profileImg) {
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponseDto.success(
+                memberService.signUp(request, profileImg), new BaseResponseDto.Meta("회원 가입 성공"))
+        );
     }
 
     /**
@@ -143,11 +146,15 @@ public class MemberController {
 
     /**
      * 현재 인증된 사용자의 프로필 정보를 입력 받은 정보로 수정. 입력된 항목만 수정한다.
-     * @param request (UpdateProfileRequestDto)
+     * @param userInfo (UpdateProfileRequestDto) 수정할 회원 정보
+     * @param profileImg (MultipartFile) 프로필 사진 파일
      */
     @PutMapping("/me")
-    public ResponseEntity<BaseResponseDto<Void>> updateUserProfile(@RequestBody @Valid UpdateProfileRequestDto request) {
-        memberService.updateUserProfile(request);
+    public ResponseEntity<BaseResponseDto<Void>> updateUserProfile(
+            @RequestPart("userInfo") @Valid UpdateProfileRequestDto userInfo,
+            @RequestPart(value = "profileImg", required = false) MultipartFile profileImg) {
+
+        memberService.updateUserProfile(userInfo, profileImg);
         return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("프로필 수정 성공"));
     }
 }

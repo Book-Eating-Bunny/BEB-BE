@@ -23,6 +23,7 @@ public record UpdateProfileRequestDto(
         @Enumerated(EnumType.STRING)
         Member.Gender gender,
 
-        String profileImgPath
+        @Pattern(regexp = "DELETE|UPDATE", flags = Pattern.Flag.CASE_INSENSITIVE)
+        String profileImgAction
 ) {
 }

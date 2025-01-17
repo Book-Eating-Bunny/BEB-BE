@@ -7,4 +7,4 @@ public record FullProfileDto(
         String nickname,
         Integer age,
         Member.Gender gender,
-        String profileImgPath) implements ProfileResponseDto{ }
+        String profileImgUrl) implements ProfileResponseDto{ }
