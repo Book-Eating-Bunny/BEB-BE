@@ -7,6 +7,8 @@ import com.beb.backend.domain.RefreshToken;
 import com.beb.backend.dto.*;
 import com.beb.backend.exception.MemberException;
 import com.beb.backend.exception.MemberExceptionInfo;
+import com.beb.backend.exception.ProfileImgException;
+import com.beb.backend.exception.ProfileImgExceptionInfo;
 import com.beb.backend.repository.MemberRepository;
 import com.beb.backend.repository.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
@@ -17,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -29,28 +32,36 @@ public class MemberService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ProfileImgService profileImgService;
 
     /**
      * 입력된 회원 정보로 회원을 생성하고 액세스 토큰과 리프레시 토큰 반환
-     * @param request (MemberSignUpRequestDto)
+     * @param request (SignUpRequestDto) 회원 정보
+     * @param profileImg (MultipartFile) 프로필 이미지
      * @return (TokenResponseDto)
      */
     @Transactional
-    public TokenResponseDto signUp(SignUpRequestDto request) {
+    public TokenResponseDto signUp(SignUpRequestDto request, MultipartFile profileImg) {
         if (isEmailDuplicated(request.email())) throw new MemberException(MemberExceptionInfo.DUPLICATE_EMAIL);
         if (isNicknameDuplicated(request.nickname())) throw new MemberException(MemberExceptionInfo.DUPLICATE_NICKNAME);
 
         String encodedPassword = passwordEncoder.encode(request.password());
-        // 회원 생성
+        // 회원 생성하여 저장
         Member member = Member.builder()
                 .email(request.email())
                 .password(encodedPassword)
                 .nickname(request.nickname())
                 .age(request.age())
-                .gender(request.gender())
-                .profileImgPath(request.profileImgPath()).build();
-        // 회원 저장
+                .gender(request.gender()).build();
         Member savedMember = memberRepository.save(member);
+
+        // 프로필 사진 저장
+        if (profileImg == null || profileImg.isEmpty()) {   // 기본 이미지로 설정
+            savedMember.setProfileImgKey(ProfileImgService.DEFAULT_PROFILE_IMG_KEY);
+        } else {    // 이미지 저장 후 Key 저장
+            savedMember.setProfileImgKey(profileImgService.uploadProfileImage(profileImg, savedMember.getId()));
+        }
+
         // 토큰 발급
         String accessToken = jwtUtils.createAccessToken(savedMember.getEmail());
         String refreshToken = jwtUtils.createRefreshToken(savedMember.getEmail());
@@ -146,7 +157,7 @@ public class MemberService {
                 member.getNickname(),
                 member.getAge(),
                 member.getGender(),
-                member.getProfileImgPath()
+                profileImgService.generateProfileImgUrl(member.getProfileImgKey())
         );
     }
 
@@ -176,29 +187,46 @@ public class MemberService {
         return memberRepository.findById(userId)
                 .map(member -> new PublicProfileDto(
                         member.getNickname(),
-                        member.getProfileImgPath()
+                        profileImgService.generateProfileImgUrl(member.getProfileImgKey())
                 ))
                 .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
     }
 
     /**
      * 현재 인증된 사용자 프로필을 입력된 정보로 수정 (비밀번호, 닉네임, 나이, 성별, 프로필 사진 수정 가능)
-     * @param request (UpdateProfileRequestDto)
+     * @param userInfo (UpdateProfileRequestDto) 수정할 회원 정보
+     * @param profileImg (MultipartFile) 프로필 사진 파일
      */
     @Transactional
-    public void updateUserProfile(UpdateProfileRequestDto request) {
+    public void updateUserProfile(UpdateProfileRequestDto userInfo, MultipartFile profileImg) {
         Member member = getCurrentMember().orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
 
-        if (request.nickname() != null && !request.nickname().equals(member.getNickname())) {
-            if (isNicknameDuplicated(request.nickname())) {
+        if (profileImg != null) {
+            if (userInfo.profileImgAction() == null || userInfo.profileImgAction().equalsIgnoreCase("DELETE")) {
+                // profileImgAction이 null(기존 사진 유지)이거나 '삭제'일 경우, profileImg 첨부 불가
+                throw new ProfileImgException(ProfileImgExceptionInfo.UPDATE_PROFILE_IMG_BAD_REQUEST);
+            }
+        }
+
+        if (userInfo.nickname() != null && !userInfo.nickname().equals(member.getNickname())) {
+            if (isNicknameDuplicated(userInfo.nickname())) {
                 throw new MemberException(MemberExceptionInfo.DUPLICATE_NICKNAME);
             }
-            member.setNickname(request.nickname());
+            member.setNickname(userInfo.nickname());
         }
-        if (request.password() != null) member.setPassword(passwordEncoder.encode(request.password()));
-        if (request.age() != null) member.setAge(request.age());
-        if (request.gender() != null) member.setGender(request.gender());
-        if (request.profileImgPath() != null) member.setProfileImgPath(request.profileImgPath());
+        if (userInfo.password() != null) member.setPassword(passwordEncoder.encode(userInfo.password()));
+        if (userInfo.age() != null) member.setAge(userInfo.age());
+        if (userInfo.gender() != null) member.setGender(userInfo.gender());
+
+        // 프로필 사진 수정
+        if (userInfo.profileImgAction() != null) {
+            if (userInfo.profileImgAction().equalsIgnoreCase("UPDATE")) {
+                member.setProfileImgKey(profileImgService.uploadProfileImage(profileImg, member.getId()));
+            } else {
+                // profileImgAction이 '삭제'일 경우 S3에 저장된 이미지 삭제하고 기본 이미지로 설정
+                member.setProfileImgKey(profileImgService.deleteProfileImage(member.getProfileImgKey()));
+            }
+        }
     }
 
     public Optional<Member> getCurrentMember() {

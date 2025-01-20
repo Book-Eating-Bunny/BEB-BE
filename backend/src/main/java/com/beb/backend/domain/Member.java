@@ -50,8 +50,8 @@ public class Member {   // 회원
     @Column(name = "gender", nullable = false) // 성별 (M, F)
     private Gender gender;
 
-    @Column(name = "profile_img_path")
-    private String profileImgPath;
+    @Column(name = "profile_img_key")
+    private String profileImgKey;
 
     @NotNull
     @CreatedDate
@@ -63,12 +63,12 @@ public class Member {   // 회원
     }
 
     @Builder
-    public Member(String email, String password, String nickname, Integer age, Gender gender, String profileImgPath) {
+    public Member(String email, String password, String nickname, Integer age, Gender gender, String profileImgKey) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.age = age;
         this.gender = gender;
-        this.profileImgPath = profileImgPath;
+        this.profileImgKey = profileImgKey;
     }
 }
