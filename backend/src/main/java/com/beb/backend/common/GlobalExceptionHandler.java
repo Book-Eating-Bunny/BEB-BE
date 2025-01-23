@@ -1,6 +1,6 @@
 package com.beb.backend.common;
 
-import com.beb.backend.dto.BaseResponseDto;
+import com.beb.backend.dto.responseDto.BaseResponseDto;
 import com.beb.backend.exception.*;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.validation.ConstraintViolationException;

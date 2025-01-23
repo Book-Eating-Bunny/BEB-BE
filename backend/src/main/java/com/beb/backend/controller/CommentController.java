@@ -1,6 +1,10 @@
 package com.beb.backend.controller;
 
-import com.beb.backend.dto.*;
+import com.beb.backend.dto.requestDto.CommentContentDto;
+import com.beb.backend.dto.responseDto.BaseResponseDto;
+import com.beb.backend.dto.responseDto.CommentDetailsDto;
+import com.beb.backend.dto.responseDto.CommentIdDto;
+import com.beb.backend.dto.responseDto.CommentListDto;
 import com.beb.backend.service.CommentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -22,7 +26,7 @@ public class CommentController {
     private final CommentService commentService;
 
     @GetMapping("/reviews/{reviewId}/comments")
-    public ResponseEntity<BaseResponseDto<CommentsResponseDto<CommentDetailsDto>>>
+    public ResponseEntity<BaseResponseDto<CommentListDto<CommentDetailsDto>>>
     getAllCommentsAboutReview(@PathVariable @Min(value = 1) Long reviewId,
                               @RequestParam(defaultValue = "1") @Min(value = 1) int page,
                               @RequestParam(defaultValue = "50") @Min(value = 1) int size) {
@@ -33,7 +37,7 @@ public class CommentController {
     }
 
     @PostMapping("/reviews/{reviewId}/comments")
-    public ResponseEntity<BaseResponseDto<CreatedCommentDto>>
+    public ResponseEntity<BaseResponseDto<CommentIdDto>>
     createComment(@PathVariable @Min(value = 1) Long reviewId,
                   @RequestBody @Valid CommentContentDto request) {
 

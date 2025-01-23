@@ -1,7 +1,11 @@
 package com.beb.backend.service;
 
 import com.beb.backend.domain.*;
-import com.beb.backend.dto.*;
+import com.beb.backend.dto.requestDto.AddReadBookDto;
+import com.beb.backend.dto.requestDto.AddWishlistBookDto;
+import com.beb.backend.dto.requestDto.CreateReviewDto;
+import com.beb.backend.dto.requestDto.UpdateReviewDto;
+import com.beb.backend.dto.responseDto.*;
 import com.beb.backend.exception.*;
 import com.beb.backend.repository.*;
 import jakarta.transaction.Transactional;
@@ -34,7 +38,7 @@ public class BookLogService {
         );
     }
 
-    private BaseResponseDto<ReadBooksResponseDto<UserReadBookDto>> getReadBooksForMember(Member member, Pageable pageable) {
+    private BaseResponseDto<ReadBookListDto<UserReadBookDto>> getReadBooksForMember(Member member, Pageable pageable) {
         Page<ReadBook> readBookPage = readBookRepository.findByMember(member, pageable);
         List<UserReadBookDto> readBooks = readBookPage.getContent().stream()
                 .map(this::mapToUserReadBookDto).toList();
@@ -42,25 +46,25 @@ public class BookLogService {
         BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
                 readBookPage.getNumber(), readBookPage.getTotalPages(), readBookPage.getTotalElements(),
                 "조회 성공");
-        return BaseResponseDto.success(new ReadBooksResponseDto<>(readBooks), meta);
+        return BaseResponseDto.success(new ReadBookListDto<>(readBooks), meta);
     }
 
     @Transactional
-    public BaseResponseDto<ReadBooksResponseDto<UserReadBookDto>> getCurrentUserReadBooks(Pageable pageable) {
+    public BaseResponseDto<ReadBookListDto<UserReadBookDto>> getCurrentUserReadBooks(Pageable pageable) {
         Member member = memberService.getCurrentMember()
                 .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         return getReadBooksForMember(member, pageable);
     }
 
     @Transactional
-    public BaseResponseDto<ReadBooksResponseDto<UserReadBookDto>> getUserReadBooks(Long memberId, Pageable pageable) {
+    public BaseResponseDto<ReadBookListDto<UserReadBookDto>> getUserReadBooks(Long memberId, Pageable pageable) {
         Member member = memberService.getMemberById(memberId)
                 .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         return getReadBooksForMember(member, pageable);
     }
 
     @Transactional
-    public void addBookToReadBook(AddReadBookRequestDto request) {
+    public void addBookToReadBook(AddReadBookDto request) {
         Optional<Book> book = bookRepository.findById(request.bookId());
         if (book.isEmpty()) throw new BookException(BookExceptionInfo.BOOK_NOT_FOUND);
 
@@ -104,7 +108,7 @@ public class BookLogService {
         );
     }
 
-    private BaseResponseDto<WishlistBooksResponseDto<UserWishlistBookDto>>
+    private BaseResponseDto<WishlistBookListDto<UserWishlistBookDto>>
     getWishlistBooksForMember(Member member, Pageable pageable) {
         Page<WishlistBook> wishlistBookPage = wishlistBookRepository.findByMember(member, pageable);
         List<UserWishlistBookDto> wishlistBooks = wishlistBookPage.getContent().stream()
@@ -113,11 +117,11 @@ public class BookLogService {
         BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
                 wishlistBookPage.getNumber(), wishlistBookPage.getTotalPages(), wishlistBookPage.getTotalElements(),
                 "조회 성공");
-        return BaseResponseDto.success(new WishlistBooksResponseDto<>(wishlistBooks), meta);
+        return BaseResponseDto.success(new WishlistBookListDto<>(wishlistBooks), meta);
     }
 
     @Transactional
-    public BaseResponseDto<WishlistBooksResponseDto<UserWishlistBookDto>>
+    public BaseResponseDto<WishlistBookListDto<UserWishlistBookDto>>
     getCurrentUserWishlistBooks(Pageable pageable) {
         Member member = memberService.getCurrentMember()
                 .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
@@ -125,7 +129,7 @@ public class BookLogService {
     }
 
     @Transactional
-    public BaseResponseDto<WishlistBooksResponseDto<UserWishlistBookDto>>
+    public BaseResponseDto<WishlistBookListDto<UserWishlistBookDto>>
     getUserWishlistBooks(Long memberId, Pageable pageable) {
         Member member = memberService.getMemberById(memberId)
                 .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
@@ -133,7 +137,7 @@ public class BookLogService {
     }
 
     @Transactional
-    public void addBookToWishlistBook(AddWishlistBookRequestDto request) {
+    public void addBookToWishlistBook(AddWishlistBookDto request) {
         Optional<Book> book = bookRepository.findById(request.bookId());
         if (book.isEmpty()) throw new BookException(BookExceptionInfo.BOOK_NOT_FOUND);
 
@@ -176,7 +180,7 @@ public class BookLogService {
         );
     }
 
-    private BaseResponseDto<ReviewsResponseDto<UserReviewDto>>
+    private BaseResponseDto<ReviewListDto<UserReviewDto>>
     getReviewsByMember(Member member, Pageable pageable, boolean isCurrentUser) {
         Page<Comment> reviewsPage = isCurrentUser ? commentRepository.findReviewsByMember(member, pageable)
                 : commentRepository.findPublicReviewsByMember(member, pageable);
@@ -186,18 +190,18 @@ public class BookLogService {
         BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
                 reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements(),
                 "조회 성공");
-        return BaseResponseDto.success(new ReviewsResponseDto<>(reviews), meta);
+        return BaseResponseDto.success(new ReviewListDto<>(reviews), meta);
     }
 
     @Transactional
-    public BaseResponseDto<ReviewsResponseDto<UserReviewDto>> getCurrentUserReviews(Pageable pageable) {
+    public BaseResponseDto<ReviewListDto<UserReviewDto>> getCurrentUserReviews(Pageable pageable) {
         Member member = memberService.getCurrentMember()
                 .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         return getReviewsByMember(member, pageable, true);
     }
 
     @Transactional
-    public BaseResponseDto<ReviewsResponseDto<UserReviewDto>> getUserReviews(Long memberId, Pageable pageable) {
+    public BaseResponseDto<ReviewListDto<UserReviewDto>> getUserReviews(Long memberId, Pageable pageable) {
         Member member = memberService.getMemberById(memberId)
                 .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         boolean isCurrentUser = memberService.getCurrentMember()
@@ -221,7 +225,7 @@ public class BookLogService {
         );
     }
 
-    public BaseResponseDto<ReviewsResponseDto<BookReviewDto>>
+    public BaseResponseDto<ReviewListDto<BookReviewDto>>
     getBookReviews(Long bookId, Pageable pageable) {
         if (!bookRepository.existsById(bookId)) throw new BookException(BookExceptionInfo.BOOK_NOT_FOUND);
 
@@ -235,7 +239,7 @@ public class BookLogService {
         BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
                 reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements(),
                 "조회 성공");
-        return BaseResponseDto.success(new ReviewsResponseDto<>(reviews), meta);
+        return BaseResponseDto.success(new ReviewListDto<>(reviews), meta);
     }
 
     private ReviewDetailsDto mapToReviewDetailsDto(Comment review) {
@@ -254,7 +258,7 @@ public class BookLogService {
         );
     }
 
-    public BaseResponseDto<ReviewsResponseDto<ReviewDetailsDto>>
+    public BaseResponseDto<ReviewListDto<ReviewDetailsDto>>
     getAllReviews(Pageable pageable) {
 
         Page<Comment> reviewsPage = memberService.getCurrentMember()
@@ -268,11 +272,11 @@ public class BookLogService {
                 reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements(),
                 "조회 성공"
         );
-        return BaseResponseDto.success(new ReviewsResponseDto<>(reviews), meta);
+        return BaseResponseDto.success(new ReviewListDto<>(reviews), meta);
     }
 
     @Transactional
-    public CreateReviewResponseDto createReview(CreateReviewRequestDto request) {
+    public ReviewIdDto createReview(CreateReviewDto request) {
         Member member = memberService.getCurrentMember()
                 .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
         Book book = bookRepository.findById(request.bookId())
@@ -290,7 +294,7 @@ public class BookLogService {
         if (!readBookRepository.existsByMemberAndBook(member, book)) {
             readBookRepository.save(ReadBook.builder().book(book).member(member).build());
         }
-        return new CreateReviewResponseDto(savedReview.getId());
+        return new ReviewIdDto(savedReview.getId());
     }
 
     @Transactional
@@ -308,7 +312,7 @@ public class BookLogService {
     }
 
     @Transactional
-    public void updateReview(Long reviewId, UpdateReviewRequestDto request) {
+    public void updateReview(Long reviewId, UpdateReviewDto request) {
         Comment review = commentRepository.findById(reviewId)
                 .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
 

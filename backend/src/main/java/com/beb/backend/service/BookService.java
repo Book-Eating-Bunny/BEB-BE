@@ -3,7 +3,11 @@ package com.beb.backend.service;
 import com.beb.backend.common.ValidationRegexConstants;
 import com.beb.backend.domain.Book;
 import com.beb.backend.domain.Category;
-import com.beb.backend.dto.*;
+import com.beb.backend.dto.externalApiDto.AladinBookItemDto;
+import com.beb.backend.dto.externalApiDto.AladinBookSearchResponseDto;
+import com.beb.backend.dto.externalApiDto.NaverBookItemDto;
+import com.beb.backend.dto.externalApiDto.NaverBookSearchResponseDto;
+import com.beb.backend.dto.responseDto.*;
 import com.beb.backend.exception.BookException;
 import com.beb.backend.exception.BookExceptionInfo;
 import com.beb.backend.exception.OpenApiException;
@@ -65,7 +69,7 @@ public class BookService {
     }
 
     @Transactional
-    public BaseResponseDto<BooksResponseDto<SearchBookInfoDto>>
+    public BaseResponseDto<BookListDto<SearchBookInfoDto>>
     searchBooksByNaverApi(String query, int page, int size) {
         // 1. api 호출 결과 받기
         NaverBookSearchResponseDto apiResponse = callNaverBookSearchApi(query, (page - 1) * size + 1, size);
@@ -98,7 +102,7 @@ public class BookService {
         BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
                 page - 1, totalPages, apiResponse.total(), "조회 성공"
         );  // Page 객체의 pageNumber 기준으로 페이지네이션 정보 생성하는 기능이라 일반적으로 사용하는 페이지 번호에서 -1
-        return BaseResponseDto.success(new BooksResponseDto<>(books), meta);
+        return BaseResponseDto.success(new BookListDto<>(books), meta);
     }
 
     private void validateAladinBookSearchResponseDto(AladinBookSearchResponseDto aladinResponseDto) {

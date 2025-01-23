@@ -1,6 +1,10 @@
 package com.beb.backend.controller;
 
-import com.beb.backend.dto.*;
+import com.beb.backend.dto.requestDto.AddReadBookDto;
+import com.beb.backend.dto.requestDto.AddWishlistBookDto;
+import com.beb.backend.dto.requestDto.CreateReviewDto;
+import com.beb.backend.dto.requestDto.UpdateReviewDto;
+import com.beb.backend.dto.responseDto.*;
 import com.beb.backend.service.BookLogService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -21,7 +25,7 @@ public class BookLogController {
     private final BookLogService bookLogService;
 
     @GetMapping("/users/me/read-books")
-    public ResponseEntity<BaseResponseDto<ReadBooksResponseDto<UserReadBookDto>>>
+    public ResponseEntity<BaseResponseDto<ReadBookListDto<UserReadBookDto>>>
     getCurrentUserReadBooks(@RequestParam(defaultValue = "1") @Min(value = 1) int page,
                             @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
 
@@ -30,7 +34,7 @@ public class BookLogController {
     }
 
     @GetMapping("/users/{userId}/read-books")
-    public ResponseEntity<BaseResponseDto<ReadBooksResponseDto<UserReadBookDto>>>
+    public ResponseEntity<BaseResponseDto<ReadBookListDto<UserReadBookDto>>>
     getUserReadBooks(@PathVariable @Min(value = 1) Long userId,
                      @RequestParam(defaultValue = "1") @Min(value = 1) int page,
                      @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
@@ -40,7 +44,7 @@ public class BookLogController {
     }
 
     @PostMapping("/users/me/read-books")
-    public ResponseEntity<BaseResponseDto<Void>> addBookToReadBook(@RequestBody AddReadBookRequestDto request) {
+    public ResponseEntity<BaseResponseDto<Void>> addBookToReadBook(@RequestBody AddReadBookDto request) {
         bookLogService.addBookToReadBook(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponseDto.emptySuccess("읽은 책 추가 성공"));
     }
@@ -52,7 +56,7 @@ public class BookLogController {
     }
 
     @GetMapping("/users/me/want-to-read-books")
-    public ResponseEntity<BaseResponseDto<WishlistBooksResponseDto<UserWishlistBookDto>>>
+    public ResponseEntity<BaseResponseDto<WishlistBookListDto<UserWishlistBookDto>>>
     getCurrentUserWishlistBooks(@RequestParam(defaultValue = "1") @Min(value = 1) int page,
                                 @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
 
@@ -61,7 +65,7 @@ public class BookLogController {
     }
 
     @GetMapping("/users/{userId}/want-to-read-books")
-    public ResponseEntity<BaseResponseDto<WishlistBooksResponseDto<UserWishlistBookDto>>>
+    public ResponseEntity<BaseResponseDto<WishlistBookListDto<UserWishlistBookDto>>>
     getUserWishlistBooks(@PathVariable @Min(value = 1) Long userId,
                          @RequestParam(defaultValue = "1") @Min(value = 1) int page,
                          @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
@@ -71,7 +75,7 @@ public class BookLogController {
     }
 
     @PostMapping("/users/me/want-to-read-books")
-    public ResponseEntity<BaseResponseDto<Void>> addBookToWishlistBook(@RequestBody AddWishlistBookRequestDto request) {
+    public ResponseEntity<BaseResponseDto<Void>> addBookToWishlistBook(@RequestBody AddWishlistBookDto request) {
         bookLogService.addBookToWishlistBook(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponseDto.emptySuccess("찜한 책 추가 성공"));
     }
@@ -84,7 +88,7 @@ public class BookLogController {
     }
 
     @GetMapping("/users/me/reviews")
-    public ResponseEntity<BaseResponseDto<ReviewsResponseDto<UserReviewDto>>>
+    public ResponseEntity<BaseResponseDto<ReviewListDto<UserReviewDto>>>
     getCurrentUserReviews(@RequestParam(defaultValue = "1") @Min(value = 1) int page,
                           @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
 
@@ -93,7 +97,7 @@ public class BookLogController {
     }
 
     @GetMapping("/users/{userId}/reviews")
-    public ResponseEntity<BaseResponseDto<ReviewsResponseDto<UserReviewDto>>>
+    public ResponseEntity<BaseResponseDto<ReviewListDto<UserReviewDto>>>
     getUserReviews(@PathVariable @Min(value = 1) Long userId,
                    @RequestParam(defaultValue = "1") @Min(value = 1) int page,
                    @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
@@ -103,7 +107,7 @@ public class BookLogController {
     }
 
     @GetMapping("/books/{bookId}/reviews")
-    public ResponseEntity<BaseResponseDto<ReviewsResponseDto<BookReviewDto>>>
+    public ResponseEntity<BaseResponseDto<ReviewListDto<BookReviewDto>>>
     getBookReviews(@PathVariable @Min(value = 1) Long bookId,
                    @RequestParam(defaultValue = "1") @Min(value = 1) int page,
                    @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
@@ -114,7 +118,7 @@ public class BookLogController {
     }
 
     @GetMapping("/reviews")
-    public ResponseEntity<BaseResponseDto<ReviewsResponseDto<ReviewDetailsDto>>>
+    public ResponseEntity<BaseResponseDto<ReviewListDto<ReviewDetailsDto>>>
     getAllReviews(@RequestParam(defaultValue = "1") @Min(value = 1) int page,
                   @RequestParam(defaultValue = "12") @Min(value = 1) int size) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
@@ -124,9 +128,9 @@ public class BookLogController {
     }
 
     @PostMapping("/reviews")
-    public ResponseEntity<BaseResponseDto<CreateReviewResponseDto>>
-    createReview(@RequestBody @Valid CreateReviewRequestDto request) {
-        CreateReviewResponseDto response = bookLogService.createReview(request);
+    public ResponseEntity<BaseResponseDto<ReviewIdDto>>
+    createReview(@RequestBody @Valid CreateReviewDto request) {
+        ReviewIdDto response = bookLogService.createReview(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 BaseResponseDto.success(response, new BaseResponseDto.Meta("리뷰 생성 성공"))
         );
@@ -144,7 +148,7 @@ public class BookLogController {
     @PutMapping("/reviews/{reviewId}")
     public ResponseEntity<BaseResponseDto<Void>>
     updateReview(@PathVariable @Min(value = 1) Long reviewId,
-                 @RequestBody @Valid UpdateReviewRequestDto request) {
+                 @RequestBody @Valid UpdateReviewDto request) {
         bookLogService.updateReview(reviewId, request);
         return ResponseEntity.status(HttpStatus.OK).body(
                 BaseResponseDto.emptySuccess("리뷰 수정 성공")

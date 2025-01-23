@@ -2,7 +2,8 @@ package com.beb.backend.service;
 
 import com.beb.backend.domain.Comment;
 import com.beb.backend.domain.Member;
-import com.beb.backend.dto.*;
+import com.beb.backend.dto.requestDto.CommentContentDto;
+import com.beb.backend.dto.responseDto.*;
 import com.beb.backend.exception.*;
 import com.beb.backend.repository.CommentRepository;
 import jakarta.transaction.Transactional;
@@ -34,7 +35,7 @@ public class CommentService {
         );
     }
 
-    public BaseResponseDto<CommentsResponseDto<CommentDetailsDto>>
+    public BaseResponseDto<CommentListDto<CommentDetailsDto>>
     getAllCommentsAboutReview(Long reviewId, Pageable pageable) {
         if (!commentRepository.existsReviewById(reviewId)) {
             throw new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND);
@@ -47,11 +48,11 @@ public class CommentService {
                 commentsPage.getNumber(), commentsPage.getTotalPages(), commentsPage.getTotalElements(),
                 "조회 성공"
         );
-        return BaseResponseDto.success(new CommentsResponseDto<>(comments), meta);
+        return BaseResponseDto.success(new CommentListDto<>(comments), meta);
     }
 
     @Transactional
-    public CreatedCommentDto createComment(Long reviewId, CommentContentDto request) {
+    public CommentIdDto createComment(Long reviewId, CommentContentDto request) {
         Comment review = commentRepository.findReviewById(reviewId)
                 .orElseThrow(() -> new BookLogException(BookLogExceptionInfo.REVIEW_NOT_FOUND));
 
@@ -59,7 +60,7 @@ public class CommentService {
                 .orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
 
         Comment savedComment = commentRepository.save(Comment.createComment(review, member, request.content()));
-        return new CreatedCommentDto(savedComment.getId());
+        return new CommentIdDto(savedComment.getId());
     }
 
     @Transactional

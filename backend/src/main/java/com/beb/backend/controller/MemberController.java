@@ -1,7 +1,10 @@
 package com.beb.backend.controller;
 
 import com.beb.backend.common.ValidationRegexConstants;
-import com.beb.backend.dto.*;
+import com.beb.backend.dto.requestDto.LoginDto;
+import com.beb.backend.dto.requestDto.SignUpDto;
+import com.beb.backend.dto.requestDto.UpdateProfileDto;
+import com.beb.backend.dto.responseDto.*;
 import com.beb.backend.exception.MemberException;
 import com.beb.backend.exception.MemberExceptionInfo;
 import com.beb.backend.service.MemberService;
@@ -30,8 +33,8 @@ public class MemberController {
      * @param profileImg (MultipartFile) 프로필 이미지 파일
      */
     @PostMapping("/signup")
-    public ResponseEntity<BaseResponseDto<TokenResponseDto>> signUp(
-            @RequestPart("userInfo") @Valid SignUpRequestDto request,
+    public ResponseEntity<BaseResponseDto<TokenDto>> signUp(
+            @RequestPart("userInfo") @Valid SignUpDto request,
             @RequestPart(value = "profileImg", required = false) MultipartFile profileImg) {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponseDto.success(
@@ -44,20 +47,20 @@ public class MemberController {
      * @param email (String) 확인할 이메일 주소
      */
     @GetMapping("/email-availability")
-    public ResponseEntity<BaseResponseDto<AvailabilityResponseDto>> checkEmailAvailability(
+    public ResponseEntity<BaseResponseDto<AvailabilityDto>> checkEmailAvailability(
             @RequestParam @NotBlank String email) {
         // email 형식 검사
         if (!email.matches(ValidationRegexConstants.EMAIL_REGEX)) {
             throw new MemberException(MemberExceptionInfo.EMAIL_NOT_VALID);
         }
         // email 중복 검사
-        BaseResponseDto<AvailabilityResponseDto> response;
-        AvailabilityResponseDto availabilityResponseDto = new AvailabilityResponseDto(!memberService.isEmailDuplicated(email));
+        BaseResponseDto<AvailabilityDto> response;
+        AvailabilityDto availabilityDto = new AvailabilityDto(!memberService.isEmailDuplicated(email));
 
-        if (availabilityResponseDto.isAvailable()) {
-            response = BaseResponseDto.success(availabilityResponseDto, new BaseResponseDto.Meta("사용 가능한 이메일"));
+        if (availabilityDto.isAvailable()) {
+            response = BaseResponseDto.success(availabilityDto, new BaseResponseDto.Meta("사용 가능한 이메일"));
         } else {
-            response = BaseResponseDto.success(availabilityResponseDto, new BaseResponseDto.Meta("이미 존재하는 이메일"));
+            response = BaseResponseDto.success(availabilityDto, new BaseResponseDto.Meta("이미 존재하는 이메일"));
         }
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -67,20 +70,20 @@ public class MemberController {
      * @param nickname (String) 확인할 닉네임
      */
     @GetMapping("/nickname-availability")
-    public ResponseEntity<BaseResponseDto<AvailabilityResponseDto>> checkNicknameAvailability(
+    public ResponseEntity<BaseResponseDto<AvailabilityDto>> checkNicknameAvailability(
             @RequestParam @NotBlank String nickname) {
         // nickname 형식 검사
         if (!nickname.matches(ValidationRegexConstants.NICKNAME_REGEX)) {
             throw new MemberException(MemberExceptionInfo.NICKNAME_NOT_VALID);
         }
         // nickname 중복 검사
-        BaseResponseDto<AvailabilityResponseDto> response;
-        AvailabilityResponseDto availabilityResponseDto = new AvailabilityResponseDto(!memberService.isNicknameDuplicated(nickname));
+        BaseResponseDto<AvailabilityDto> response;
+        AvailabilityDto availabilityDto = new AvailabilityDto(!memberService.isNicknameDuplicated(nickname));
 
-        if (availabilityResponseDto.isAvailable()) {
-            response = BaseResponseDto.success(availabilityResponseDto, new BaseResponseDto.Meta("사용 가능한 닉네임"));
+        if (availabilityDto.isAvailable()) {
+            response = BaseResponseDto.success(availabilityDto, new BaseResponseDto.Meta("사용 가능한 닉네임"));
         } else {
-            response = BaseResponseDto.success(availabilityResponseDto, new BaseResponseDto.Meta("이미 존재하는 닉네임"));
+            response = BaseResponseDto.success(availabilityDto, new BaseResponseDto.Meta("이미 존재하는 닉네임"));
         }
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -90,9 +93,9 @@ public class MemberController {
      * @param loginRequest (LoginRequestDto) "email", "password"
      */
     @PostMapping("/login")
-    public ResponseEntity<BaseResponseDto<TokenResponseDto>> login(@RequestBody @Valid LoginRequestDto loginRequest) {
-        TokenResponseDto loginResponse = memberService.login(loginRequest);
-        BaseResponseDto<TokenResponseDto> response = BaseResponseDto.success(
+    public ResponseEntity<BaseResponseDto<TokenDto>> login(@RequestBody @Valid LoginDto loginRequest) {
+        TokenDto loginResponse = memberService.login(loginRequest);
+        BaseResponseDto<TokenDto> response = BaseResponseDto.success(
                 loginResponse, new BaseResponseDto.Meta("로그인 성공")
         );
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -103,10 +106,10 @@ public class MemberController {
      * @param refreshToken (String) 리프레시 토큰
      */
     @PostMapping("/reissue")
-    public ResponseEntity<BaseResponseDto<TokenResponseDto>> reissueJwt(
+    public ResponseEntity<BaseResponseDto<TokenDto>> reissueJwt(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION) String refreshToken) {
 
-        TokenResponseDto tokenResponse = memberService.reissueJwt(refreshToken);
+        TokenDto tokenResponse = memberService.reissueJwt(refreshToken);
         return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.success(
                 tokenResponse, new BaseResponseDto.Meta("토큰 재발급 성공")
         ));
@@ -151,7 +154,7 @@ public class MemberController {
      */
     @PutMapping("/me")
     public ResponseEntity<BaseResponseDto<Void>> updateUserProfile(
-            @RequestPart("userInfo") @Valid UpdateProfileRequestDto userInfo,
+            @RequestPart("userInfo") @Valid UpdateProfileDto userInfo,
             @RequestPart(value = "profileImg", required = false) MultipartFile profileImg) {
 
         memberService.updateUserProfile(userInfo, profileImg);

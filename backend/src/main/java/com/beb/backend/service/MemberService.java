@@ -4,7 +4,13 @@ import com.beb.backend.auth.BebAuthenticationProvider;
 import com.beb.backend.auth.JwtUtils;
 import com.beb.backend.domain.Member;
 import com.beb.backend.domain.RefreshToken;
-import com.beb.backend.dto.*;
+import com.beb.backend.dto.requestDto.LoginDto;
+import com.beb.backend.dto.requestDto.SignUpDto;
+import com.beb.backend.dto.requestDto.UpdateProfileDto;
+import com.beb.backend.dto.responseDto.FullProfileDto;
+import com.beb.backend.dto.responseDto.ProfileResponseDto;
+import com.beb.backend.dto.responseDto.PublicProfileDto;
+import com.beb.backend.dto.responseDto.TokenDto;
 import com.beb.backend.exception.MemberException;
 import com.beb.backend.exception.MemberExceptionInfo;
 import com.beb.backend.exception.ProfileImgException;
@@ -41,7 +47,7 @@ public class MemberService {
      * @return (TokenResponseDto)
      */
     @Transactional
-    public TokenResponseDto signUp(SignUpRequestDto request, MultipartFile profileImg) {
+    public TokenDto signUp(SignUpDto request, MultipartFile profileImg) {
         if (isEmailDuplicated(request.email())) throw new MemberException(MemberExceptionInfo.DUPLICATE_EMAIL);
         if (isNicknameDuplicated(request.nickname())) throw new MemberException(MemberExceptionInfo.DUPLICATE_NICKNAME);
 
@@ -66,7 +72,7 @@ public class MemberService {
         String accessToken = jwtUtils.createAccessToken(savedMember.getEmail());
         String refreshToken = jwtUtils.createRefreshToken(savedMember.getEmail());
         refreshTokenRepository.save(new RefreshToken(savedMember.getEmail(), refreshToken));
-        return new TokenResponseDto(accessToken, refreshToken);
+        return new TokenDto(accessToken, refreshToken);
     }
 
     /**
@@ -98,7 +104,7 @@ public class MemberService {
      * @see JwtUtils
      */
     @Transactional
-    public TokenResponseDto login(LoginRequestDto request) {
+    public TokenDto login(LoginDto request) {
         // 1. 인증 객체 생성 & Spring Security 인증 작업 수동 호출
         Authentication authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(request.email(), request.password())
@@ -113,7 +119,7 @@ public class MemberService {
         existingToken.ifPresentOrElse(
                 token -> token.setToken(refreshToken),
                 () -> refreshTokenRepository.save(new RefreshToken(authentication.getName(), refreshToken)));
-        return new TokenResponseDto(accessToken, refreshToken);
+        return new TokenDto(accessToken, refreshToken);
     }
 
     /**
@@ -122,7 +128,7 @@ public class MemberService {
      * @return (TokenResponseDto)
      */
     @Transactional
-    public TokenResponseDto reissueJwt(String refreshToken) {
+    public TokenDto reissueJwt(String refreshToken) {
         // 1. 리프레시 토큰 검증
         if (!jwtUtils.validateToken(refreshToken)) throw new IllegalArgumentException("Invalid refresh token");
 
@@ -137,7 +143,7 @@ public class MemberService {
         String newRefreshToken = jwtUtils.createRefreshToken(username);
         // 3. 리프레시 토큰 업데이트
         storedToken.setToken(newAccessToken);
-        return new TokenResponseDto(newAccessToken, newRefreshToken);
+        return new TokenDto(newAccessToken, newRefreshToken);
     }
 
     /**
@@ -198,7 +204,7 @@ public class MemberService {
      * @param profileImg (MultipartFile) 프로필 사진 파일
      */
     @Transactional
-    public void updateUserProfile(UpdateProfileRequestDto userInfo, MultipartFile profileImg) {
+    public void updateUserProfile(UpdateProfileDto userInfo, MultipartFile profileImg) {
         Member member = getCurrentMember().orElseThrow(() -> new MemberException(MemberExceptionInfo.MEMBER_NOT_FOUND));
 
         if (profileImg != null) {

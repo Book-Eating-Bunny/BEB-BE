@@ -1,7 +1,10 @@
 package com.beb.backend.controller;
 
 import com.beb.backend.common.ValidationRegexConstants;
-import com.beb.backend.dto.*;
+import com.beb.backend.dto.responseDto.BaseResponseDto;
+import com.beb.backend.dto.responseDto.BookAndUserStatusDto;
+import com.beb.backend.dto.responseDto.BookListDto;
+import com.beb.backend.dto.responseDto.SearchBookInfoDto;
 import com.beb.backend.service.BookService;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -21,7 +24,7 @@ public class BookController {
     private final BookService bookService;
 
     @GetMapping
-    public ResponseEntity<BaseResponseDto<BooksResponseDto<SearchBookInfoDto>>>
+    public ResponseEntity<BaseResponseDto<BookListDto<SearchBookInfoDto>>>
     searchBooksByNaverApi(@RequestParam @NotBlank String query,
                           @RequestParam(required = false, defaultValue = "1") @Min(value = 1) int page,
                           @RequestParam(required = false, defaultValue = "30") @Min(value = 1) int size) {
