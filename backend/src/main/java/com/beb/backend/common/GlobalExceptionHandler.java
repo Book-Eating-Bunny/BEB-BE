@@ -20,75 +20,73 @@ public class GlobalExceptionHandler {
     // RequestParam에서 필수 파라미터가 없을 경우
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<BaseResponseDto<Object>> handleMissingServletRequestParameterException(MissingServletRequestParameterException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(BaseResponseDto.fail("잘못된 요청"));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(BaseResponseDto.ofFailure("잘못된 요청"));
     }
 
     // 파라미터에서 @Valid로 검사했을 때 예외 발생 시
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<BaseResponseDto<Object>> handleValidationExceptions(MethodArgumentNotValidException e) {
-        BaseResponseDto<Object> response = BaseResponseDto.fail("잘못된 요청");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(BaseResponseDto.ofFailure("잘못된 요청"));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<BaseResponseDto<Object>> handleValidationExceptions(ConstraintViolationException e) {
-        BaseResponseDto<Object> response = BaseResponseDto.fail("잘못된 요청");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(BaseResponseDto.ofFailure("잘못된 요청"));
     }
 
     @ExceptionHandler(MemberException.class)
     public ResponseEntity<BaseResponseDto<Void>> handleMemberExceptions(MemberException e) {
         MemberExceptionInfo info = e.getInfo();
-        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
+        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.ofFailure(info.getMessage()));
     }
 
     @ExceptionHandler(BookException.class)
     public ResponseEntity<BaseResponseDto<Void>> handleBookExceptions(BookException e) {
         BookExceptionInfo info = e.getInfo();
-        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
+        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.ofFailure(info.getMessage()));
     }
 
     @ExceptionHandler(BookLogException.class)
     public ResponseEntity<BaseResponseDto<Void>> handleReadBookExceptions(BookLogException e) {
         BookLogExceptionInfo info = e.getInfo();
-        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
+        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.ofFailure(info.getMessage()));
     }
 
     @ExceptionHandler(CommentException.class)
     public ResponseEntity<BaseResponseDto<Void>> handleCommentExceptions(CommentException e) {
         CommentExceptionInfo info = e.getInfo();
-        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
+        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.ofFailure(info.getMessage()));
     }
 
     @ExceptionHandler(OpenApiException.class)
     public ResponseEntity<BaseResponseDto<Void>> handleOpenApiExceptions(OpenApiException e) {
         OpenApiExceptionInfo info = e.getInfo();
-        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
+        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.ofFailure(info.getMessage()));
     }
 
     @ExceptionHandler(AwsS3Exception.class)
     public ResponseEntity<BaseResponseDto<Void>> handleAwsS3Exceptions(AwsS3Exception e) {
         AwsS3ExceptionInfo info = e.getInfo();
-        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.fail(info.getMessage()));
+        return ResponseEntity.status(info.getStatus()).body(BaseResponseDto.ofFailure(info.getMessage()));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<BaseResponseDto<Void>> handleBadCredentialsExceptions(BadCredentialsException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail("인증 실패"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.ofFailure("인증 실패"));
     }
 
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<BaseResponseDto<Void>> handleExpiredJwtExceptions(ExpiredJwtException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail("만료된 토큰"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.ofFailure("만료된 토큰"));
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<BaseResponseDto<Void>> handleAuthenticationExceptions(AuthenticationException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.fail("인증 실패"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(BaseResponseDto.ofFailure("인증 실패"));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<BaseResponseDto<Void>> handleExceptions(Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponseDto.fail(e.getMessage()));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponseDto.ofFailure(e.getMessage()));
     }
 }

@@ -41,9 +41,8 @@ public class CommentController {
     createComment(@PathVariable @Min(value = 1) Long reviewId,
                   @RequestBody @Valid CommentContentDto request) {
 
-        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.success(
-                commentService.createComment(reviewId, request),
-                new BaseResponseDto.Meta("댓글 생성 성공"))
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.ofSuccess(
+                commentService.createComment(reviewId, request), "댓글 생성 성공")
         );
     }
 
@@ -53,7 +52,7 @@ public class CommentController {
                   @RequestBody @Valid CommentContentDto request) {
         commentService.updateComment(commentId, request);
         return ResponseEntity.status(HttpStatus.OK).body(
-                BaseResponseDto.emptySuccess("댓글 수정 성공")
+                BaseResponseDto.ofEmptySuccess("댓글 수정 성공")
         );
     }
 
@@ -62,7 +61,7 @@ public class CommentController {
     deleteComment(@PathVariable @Min(value = 1) Long commentId) {
         commentService.deleteComment(commentId);
         return ResponseEntity.status(HttpStatus.OK).body(
-                BaseResponseDto.emptySuccess("댓글 삭제 성공")
+                BaseResponseDto.ofEmptySuccess("댓글 삭제 성공")
         );
     }
 }

@@ -46,13 +46,13 @@ public class BookLogController {
     @PostMapping("/users/me/read-books")
     public ResponseEntity<BaseResponseDto<Void>> addBookToReadBook(@RequestBody AddReadBookDto request) {
         bookLogService.addBookToReadBook(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponseDto.emptySuccess("읽은 책 추가 성공"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponseDto.ofEmptySuccess("읽은 책 추가 성공"));
     }
 
     @DeleteMapping("/users/me/read-books/{readBookId}")
     public ResponseEntity<BaseResponseDto<Void>> deleteBookFromReadBook(@PathVariable @Min(value = 1) Long readBookId) {
         bookLogService.deleteBookFromReadBook(readBookId);
-        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("읽은 책 삭제 성공"));
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.ofEmptySuccess("읽은 책 삭제 성공"));
     }
 
     @GetMapping("/users/me/want-to-read-books")
@@ -77,14 +77,14 @@ public class BookLogController {
     @PostMapping("/users/me/want-to-read-books")
     public ResponseEntity<BaseResponseDto<Void>> addBookToWishlistBook(@RequestBody AddWishlistBookDto request) {
         bookLogService.addBookToWishlistBook(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponseDto.emptySuccess("찜한 책 추가 성공"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponseDto.ofEmptySuccess("찜한 책 추가 성공"));
     }
 
     @DeleteMapping("/users/me/want-to-read-books/{wishlistBookId}")
     public ResponseEntity<BaseResponseDto<Void>> deleteBookFromWishlistBook(
             @PathVariable @Min(value = 1) Long wishlistBookId) {
         bookLogService.deleteBookFromWishlistBook(wishlistBookId);
-        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("찜한 책 삭제 성공"));
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.ofEmptySuccess("찜한 책 삭제 성공"));
     }
 
     @GetMapping("/users/me/reviews")
@@ -130,9 +130,8 @@ public class BookLogController {
     @PostMapping("/reviews")
     public ResponseEntity<BaseResponseDto<ReviewIdDto>>
     createReview(@RequestBody @Valid CreateReviewDto request) {
-        ReviewIdDto response = bookLogService.createReview(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                BaseResponseDto.success(response, new BaseResponseDto.Meta("리뷰 생성 성공"))
+                BaseResponseDto.ofSuccess(bookLogService.createReview(request), "리뷰 생성 성공")
         );
     }
 
@@ -140,8 +139,7 @@ public class BookLogController {
     public ResponseEntity<BaseResponseDto<ReviewDetailsDto>>
     getReviewDetails(@PathVariable @Min(value = 1) Long reviewId) {
         return ResponseEntity.status(HttpStatus.OK).body(
-                BaseResponseDto.success(bookLogService.getReviewDetails(reviewId),
-                        new BaseResponseDto.Meta("조회 성공"))
+                BaseResponseDto.ofSuccess(bookLogService.getReviewDetails(reviewId), "조회 성공")
         );
     }
 
@@ -151,7 +149,7 @@ public class BookLogController {
                  @RequestBody @Valid UpdateReviewDto request) {
         bookLogService.updateReview(reviewId, request);
         return ResponseEntity.status(HttpStatus.OK).body(
-                BaseResponseDto.emptySuccess("리뷰 수정 성공")
+                BaseResponseDto.ofEmptySuccess("리뷰 수정 성공")
         );
     }
 
@@ -159,7 +157,7 @@ public class BookLogController {
     public ResponseEntity<BaseResponseDto<Void>> deleteReview(@PathVariable @Min(value = 1) Long reviewId) {
         bookLogService.deleteReview(reviewId);
         return ResponseEntity.status(HttpStatus.OK).body(
-                BaseResponseDto.emptySuccess("리뷰 삭제 성공")
+                BaseResponseDto.ofEmptySuccess("리뷰 삭제 성공")
         );
     }
 
@@ -167,7 +165,7 @@ public class BookLogController {
     public ResponseEntity<BaseResponseDto<Void>> createReviewLike(@PathVariable @Min(value = 1) Long reviewId) {
         bookLogService.createReviewLike(reviewId);
         return ResponseEntity.status(HttpStatus.OK).body(
-                BaseResponseDto.emptySuccess("리뷰 좋아요 추가")
+                BaseResponseDto.ofEmptySuccess("리뷰 좋아요 추가")
         );
     }
 
@@ -175,7 +173,7 @@ public class BookLogController {
     public ResponseEntity<BaseResponseDto<Void>> deleteReviewLike(@PathVariable @Min(value = 1) Long reviewId) {
         bookLogService.deleteReviewLike(reviewId);
         return ResponseEntity.status(HttpStatus.OK).body(
-                BaseResponseDto.emptySuccess("리뷰 좋아요 취소")
+                BaseResponseDto.ofEmptySuccess("리뷰 좋아요 취소")
         );
     }
 }

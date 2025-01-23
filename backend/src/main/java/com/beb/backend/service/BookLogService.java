@@ -43,10 +43,8 @@ public class BookLogService {
         List<UserReadBookDto> readBooks = readBookPage.getContent().stream()
                 .map(this::mapToUserReadBookDto).toList();
 
-        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
-                readBookPage.getNumber(), readBookPage.getTotalPages(), readBookPage.getTotalElements(),
-                "조회 성공");
-        return BaseResponseDto.success(new ReadBookListDto<>(readBooks), meta);
+        return BaseResponseDto.ofSuccessWithPagination(new ReadBookListDto<>(readBooks), "조회 성공",
+                readBookPage.getNumber(), readBookPage.getTotalPages(), readBookPage.getTotalElements());
     }
 
     @Transactional
@@ -114,10 +112,8 @@ public class BookLogService {
         List<UserWishlistBookDto> wishlistBooks = wishlistBookPage.getContent().stream()
                 .map(this::mapToUserWishlistBookDto).toList();
 
-        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
-                wishlistBookPage.getNumber(), wishlistBookPage.getTotalPages(), wishlistBookPage.getTotalElements(),
-                "조회 성공");
-        return BaseResponseDto.success(new WishlistBookListDto<>(wishlistBooks), meta);
+        return BaseResponseDto.ofSuccessWithPagination(new WishlistBookListDto<>(wishlistBooks), "조회 성공",
+                wishlistBookPage.getNumber(), wishlistBookPage.getTotalPages(), wishlistBookPage.getTotalElements());
     }
 
     @Transactional
@@ -187,10 +183,8 @@ public class BookLogService {
         List<UserReviewDto> reviews = reviewsPage.getContent().stream()
                 .map(review -> mapToUserReviewDto(review, isCurrentUser)).toList();
 
-        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
-                reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements(),
-                "조회 성공");
-        return BaseResponseDto.success(new ReviewListDto<>(reviews), meta);
+        return BaseResponseDto.ofSuccessWithPagination(new ReviewListDto<>(reviews), "조회 성공",
+                reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements());
     }
 
     @Transactional
@@ -236,10 +230,8 @@ public class BookLogService {
         List<BookReviewDto> reviews = reviewsPage.getContent().stream()
                 .map(this::mapToBookReviewDto).toList();
 
-        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
-                reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements(),
-                "조회 성공");
-        return BaseResponseDto.success(new ReviewListDto<>(reviews), meta);
+        return BaseResponseDto.ofSuccessWithPagination(new ReviewListDto<>(reviews), "조회 성공",
+                reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements());
     }
 
     private ReviewDetailsDto mapToReviewDetailsDto(Comment review) {
@@ -268,11 +260,8 @@ public class BookLogService {
         List<ReviewDetailsDto> reviews = reviewsPage.getContent().stream()
                 .map(this::mapToReviewDetailsDto).toList();
 
-        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
-                reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements(),
-                "조회 성공"
-        );
-        return BaseResponseDto.success(new ReviewListDto<>(reviews), meta);
+        return BaseResponseDto.ofSuccessWithPagination(new ReviewListDto<>(reviews), "조회 성공",
+                reviewsPage.getNumber(), reviewsPage.getTotalPages(), reviewsPage.getTotalElements());
     }
 
     @Transactional

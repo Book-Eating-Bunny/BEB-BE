@@ -43,7 +43,7 @@ public class BookController {
     public ResponseEntity<BaseResponseDto<BookAndUserStatusDto>>
     getBookDetailsByIsbn(@PathVariable @Pattern(regexp = ValidationRegexConstants.ISBN_REGEX) String isbn) {
         return ResponseEntity.status(HttpStatus.OK).body(
-                BaseResponseDto.success(bookService.getBookDetailsByIsbn(isbn), new BaseResponseDto.Meta("조회 성공"))
+                BaseResponseDto.ofSuccess(bookService.getBookDetailsByIsbn(isbn), "조회 성공")
         );
     }
 
@@ -55,7 +55,7 @@ public class BookController {
     public ResponseEntity<BaseResponseDto<BookAndUserStatusDto>>
     getBookDetailsById(@PathVariable @Min(value = 1) Long bookId) {
         return ResponseEntity.status(HttpStatus.OK).body(
-                BaseResponseDto.success(bookService.getBookDetailsById(bookId), new BaseResponseDto.Meta("조회 성공"))
+                BaseResponseDto.ofSuccess(bookService.getBookDetailsById(bookId), "조회 성공")
         );
     }
 }

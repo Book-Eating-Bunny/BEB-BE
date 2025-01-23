@@ -37,8 +37,8 @@ public class MemberController {
             @RequestPart("userInfo") @Valid SignUpDto request,
             @RequestPart(value = "profileImg", required = false) MultipartFile profileImg) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponseDto.success(
-                memberService.signUp(request, profileImg), new BaseResponseDto.Meta("회원 가입 성공"))
+        return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponseDto.ofSuccess(
+                memberService.signUp(request, profileImg), "회원 가입 성공")
         );
     }
 
@@ -58,9 +58,9 @@ public class MemberController {
         AvailabilityDto availabilityDto = new AvailabilityDto(!memberService.isEmailDuplicated(email));
 
         if (availabilityDto.isAvailable()) {
-            response = BaseResponseDto.success(availabilityDto, new BaseResponseDto.Meta("사용 가능한 이메일"));
+            response = BaseResponseDto.ofSuccess(availabilityDto, "사용 가능한 이메일");
         } else {
-            response = BaseResponseDto.success(availabilityDto, new BaseResponseDto.Meta("이미 존재하는 이메일"));
+            response = BaseResponseDto.ofSuccess(availabilityDto, "이미 존재하는 이메일");
         }
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -81,9 +81,9 @@ public class MemberController {
         AvailabilityDto availabilityDto = new AvailabilityDto(!memberService.isNicknameDuplicated(nickname));
 
         if (availabilityDto.isAvailable()) {
-            response = BaseResponseDto.success(availabilityDto, new BaseResponseDto.Meta("사용 가능한 닉네임"));
+            response = BaseResponseDto.ofSuccess(availabilityDto, "사용 가능한 닉네임");
         } else {
-            response = BaseResponseDto.success(availabilityDto, new BaseResponseDto.Meta("이미 존재하는 닉네임"));
+            response = BaseResponseDto.ofSuccess(availabilityDto, "이미 존재하는 닉네임");
         }
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -94,9 +94,8 @@ public class MemberController {
      */
     @PostMapping("/login")
     public ResponseEntity<BaseResponseDto<TokenDto>> login(@RequestBody @Valid LoginDto loginRequest) {
-        TokenDto loginResponse = memberService.login(loginRequest);
-        BaseResponseDto<TokenDto> response = BaseResponseDto.success(
-                loginResponse, new BaseResponseDto.Meta("로그인 성공")
+        BaseResponseDto<TokenDto> response = BaseResponseDto.ofSuccess(
+                memberService.login(loginRequest), "로그인 성공"
         );
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -109,9 +108,8 @@ public class MemberController {
     public ResponseEntity<BaseResponseDto<TokenDto>> reissueJwt(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION) String refreshToken) {
 
-        TokenDto tokenResponse = memberService.reissueJwt(refreshToken);
-        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.success(
-                tokenResponse, new BaseResponseDto.Meta("토큰 재발급 성공")
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.ofSuccess(
+                memberService.reissueJwt(refreshToken), "토큰 재발급 성공"
         ));
     }
 
@@ -123,7 +121,7 @@ public class MemberController {
     public ResponseEntity<BaseResponseDto<Void>> logout(@RequestHeader(value = HttpHeaders.AUTHORIZATION) String authorization) {
         String accessToken = authorization.split(" ")[1];
         memberService.logout(accessToken);
-        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("로그아웃 성공"));
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.ofEmptySuccess("로그아웃 성공"));
     }
 
     /**
@@ -131,8 +129,8 @@ public class MemberController {
      */
     @GetMapping("/me")
     public ResponseEntity<BaseResponseDto<FullProfileDto>> getCurrentUserProfile() {
-        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.success(
-                memberService.getCurrentUserProfile(), new BaseResponseDto.Meta("프로필 조회 성공")
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.ofSuccess(
+                memberService.getCurrentUserProfile(), "프로필 조회 성공"
         ));
     }
 
@@ -142,8 +140,8 @@ public class MemberController {
      */
     @GetMapping("/{userId}")
     public ResponseEntity<BaseResponseDto<ProfileResponseDto>> getUserProfile(@PathVariable @Min(value = 1) Long userId) {
-        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.success(
-                memberService.getUserProfile(userId), new BaseResponseDto.Meta("프로필 조회 성공")
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.ofSuccess(
+                memberService.getUserProfile(userId), "프로필 조회 성공"
         ));
     }
 
@@ -158,6 +156,6 @@ public class MemberController {
             @RequestPart(value = "profileImg", required = false) MultipartFile profileImg) {
 
         memberService.updateUserProfile(userInfo, profileImg);
-        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.emptySuccess("프로필 수정 성공"));
+        return ResponseEntity.status(HttpStatus.OK).body(BaseResponseDto.ofEmptySuccess("프로필 수정 성공"));
     }
 }

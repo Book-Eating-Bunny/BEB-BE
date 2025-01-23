@@ -9,19 +9,22 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public record BaseResponseDto<T>(
         Integer result,
         T data,
-        Meta meta
-) {
+        Meta meta) {
 
-    public static <T> BaseResponseDto<T> success(T data, Meta meta) {
-        return new BaseResponseDto<>(1, data, meta);
+    public static <T> BaseResponseDto<T> ofSuccess(T data, String message) {
+        return new BaseResponseDto<>(1, data, Meta.ofMessage(message));
     }
 
-    public static <T> BaseResponseDto<T> fail(String message) {
-        return new BaseResponseDto<>(0, null, new Meta(message));
+    public static <T> BaseResponseDto<T> ofFailure(String message) {
+        return new BaseResponseDto<>(0, null, Meta.ofMessage(message));
     }
 
-    public static BaseResponseDto<Void> emptySuccess(String message) {
-        return new BaseResponseDto<>(1, null, new Meta(message));
+    public static BaseResponseDto<Void> ofEmptySuccess(String message) {
+        return new BaseResponseDto<>(1, null, Meta.ofMessage(message));
+    }
+
+    public static <T> BaseResponseDto<T> ofSuccessWithPagination(T data, String message, int pageNumber, int totalPages, long totalElements) {
+        return new BaseResponseDto<>(1, data, Meta.ofPagination(message, pageNumber, totalPages, totalElements));
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -29,19 +32,16 @@ public record BaseResponseDto<T>(
             String message,
             Integer currentPage,
             Integer totalPages,
-            Long totalElements
-    ) {
-        public Meta(String message) {
-            this(message, null, null, null);
+            Long totalElements) {
+
+        // 메시지만 포함된 메타 정보
+        public static Meta ofMessage(String message) {
+            return new Meta(message, null, null, null);
         }
 
-        public static Meta createPaginationMeta(int pageNumber, int totalPages, long totalElements, String message) {
-            return new Meta(
-                    message,
-                    pageNumber + 1,
-                    totalPages,
-                    totalElements
-            );
+        // 페이징 정보 포함한 메타 정보
+        public static Meta ofPagination(String message, int pageNumber, int totalPages, long totalElements) {
+            return new Meta(message, pageNumber + 1, totalPages, totalElements);
         }
     }
 }

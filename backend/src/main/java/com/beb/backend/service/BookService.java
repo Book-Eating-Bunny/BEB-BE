@@ -99,10 +99,9 @@ public class BookService {
 
         // 4. meta 정보 생성해 함께 반환
         int totalPages = apiResponse.total() / size + (apiResponse.total() % size == 0 ? 0 : 1);
-        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
-                page - 1, totalPages, apiResponse.total(), "조회 성공"
-        );  // Page 객체의 pageNumber 기준으로 페이지네이션 정보 생성하는 기능이라 일반적으로 사용하는 페이지 번호에서 -1
-        return BaseResponseDto.success(new BookListDto<>(books), meta);
+        // Page 객체의 pageNumber 기준으로 페이지네이션 정보 생성하는 기능이라 일반적으로 사용하는 페이지 번호에서 -1
+        return BaseResponseDto.ofSuccessWithPagination(new BookListDto<>(books), "조회 성공",
+                page - 1, totalPages, apiResponse.total());
     }
 
     private void validateAladinBookSearchResponseDto(AladinBookSearchResponseDto aladinResponseDto) {

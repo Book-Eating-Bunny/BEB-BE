@@ -44,11 +44,8 @@ public class CommentService {
         List<CommentDetailsDto> comments = commentsPage.getContent().stream()
                 .map(this::mapToCommentDetailsDto).toList();
 
-        BaseResponseDto.Meta meta = BaseResponseDto.Meta.createPaginationMeta(
-                commentsPage.getNumber(), commentsPage.getTotalPages(), commentsPage.getTotalElements(),
-                "조회 성공"
-        );
-        return BaseResponseDto.success(new CommentListDto<>(comments), meta);
+        return BaseResponseDto.ofSuccessWithPagination(new CommentListDto<>(comments), "조회 성공",
+                commentsPage.getNumber(), commentsPage.getTotalPages(), commentsPage.getTotalElements());
     }
 
     @Transactional
