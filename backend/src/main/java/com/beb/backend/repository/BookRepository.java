@@ -11,6 +11,4 @@ import java.util.Optional;
 public interface BookRepository extends JpaRepository<Book, Long> {
     Optional<Book> findByIsbn(String isbn);
     List<Book> findAllByIsbnIn(List<String> isbn);
-
-    boolean existsByIsbn(String isbn);
 }

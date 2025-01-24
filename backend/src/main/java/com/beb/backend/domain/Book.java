@@ -87,20 +87,6 @@ public class Book {
         this.reviewCount = 0;
     }
 
-    public void updateBookInfo(String title, String author, String coverImgUrl,
-                               String publisher, LocalDate publishedDate,
-                               String isbn, Category category) {
-        this.title = title;
-        this.author = author;
-        this.coverImgUrl = coverImgUrl;
-        this.publisher = publisher;
-        this.publishedDate = publishedDate;
-        this.isbn = isbn;
-        this.category = category;
-
-        this.updatedAt = LocalDateTime.now();
-    }
-
     public void addRating(int rating) {
         if (this.reviewCount > 0) {
             this.averageRating = (this.averageRating * this.reviewCount + rating) / (this.reviewCount + 1);
