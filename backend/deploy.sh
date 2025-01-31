@@ -5,7 +5,7 @@ cd /var/lib/jenkins/workspace/backend-pipeline/backend
 sudo chmod +x ./gradlew
 
 sudo ./gradlew clean build
-
+테스트
 # 빌드 성공 여부 확인
 if [ $? -ne 0 ]; then
   echo "Gradle 빌드 실패"
