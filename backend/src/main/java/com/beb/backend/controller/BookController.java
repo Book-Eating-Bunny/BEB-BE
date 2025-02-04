@@ -38,6 +38,7 @@ public class BookController {
      * GET 메서드이지만 DB에 쓰는 작업이 수행될 수 있다.
      * 알라딘을 통한 검색 결과를 얻지 못했을 경우에 404 NOT FOUND 응답을 반환한다.
      * @param isbn 도서 ISBN (13자리)
+     * @return isbn으로 찾은 도서 상세 정보와 현재 사용자의 책에 대한 상태(읽은 책인지, 찜한 책인지, 리뷰를 작성했는지) 정보
      */
     @GetMapping("/isbn/{isbn}")
     public ResponseEntity<BaseResponseDto<BookAndUserStatusDto>>
@@ -50,6 +51,7 @@ public class BookController {
     /**
      * bookId 로 도서 상세 정보 조회. DB에 없을 경우 바로 404 NOT FOUND 응답을 반환한다.
      * @param bookId 도서 PK
+     * @return bookId로 찾은 도서 상세 정보와 현재 사용자의 책에 대한 상태(읽은 책인지, 찜한 책인지, 리뷰를 작성했는지) 정보
      */
     @GetMapping("/{bookId}")
     public ResponseEntity<BaseResponseDto<BookAndUserStatusDto>>

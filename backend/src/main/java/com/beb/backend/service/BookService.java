@@ -68,6 +68,15 @@ public class BookService {
                 .block();
     }
 
+    /**
+     * 입력된 검색어로 네이버 책 검색 API를 통해 책을 검색한 결과 반환.
+     * DB에 저장되어 있는 책과 isbn이 일치하는 책은 DB의 평점과 리뷰 수 정보가 병함되어 제공되며,
+     * DB에 저장되어 있지 않은 책은 평점이 null, 리뷰 수가 0으로 나온다.
+     * @param query 검색어
+     * @param page 페이지 번호 (기본값 1)
+     * @param size 페이지 내 결과 개수 (기본값 30)
+     * @return 검색어로 검색된 책 정보 목록
+     */
     @Transactional
     public BaseResponseDto<BookListDto<SearchBookInfoDto>>
     searchBooksByNaverApi(String query, int page, int size) {
@@ -163,6 +172,12 @@ public class BookService {
         return bookRepository.save(book);
     }
 
+    /**
+     * ISBN으로 책을 찾아 책에 대한 상세 정보와 현재 유저의 책에 대한 상태 정보(읽은 책, 찜한 책, 리뷰 작성 여부) 반환
+     * DB에서 먼저 찾아본 후, DB에 없으면 알라딘 상품 조회 API를 호출하여 책 정보를 가져와 DB에 저장하고 반환한다.
+     * @param isbn 찾을 책의 ISBN(13자리)
+     * @return 입력된 ISBN을 갖는 책에 대한 정보
+     */
     @Transactional
     public BookAndUserStatusDto getBookDetailsByIsbn(String isbn) {
         Optional<Book> book = bookRepository.findByIsbn(isbn);
@@ -182,6 +197,11 @@ public class BookService {
         );
     }
 
+    /**
+     * bookId로 책을 찾아 책에 대한 상세 정보와 현재 유저의 책에 대한 상태 정보(읽은 책, 찜한 책, 리뷰 작성 여부) 반환
+     * @param bookId 찾을 책의 ID(PK)
+     * @return 입력된 bookId를 갖는 책에 대한 정보
+     */
     @Transactional
     public BookAndUserStatusDto getBookDetailsById(Long bookId) {
         Book book = bookRepository.findById(bookId)
@@ -232,9 +252,9 @@ public class BookService {
      * @param aladinBookItems 알라딘 상품 리스트
      */
     private List<Book> filterNonExistingBooks(List<AladinBookItemDto> aladinBookItems) {
-        // 입력 리스트에서 ISBN 형식 안 맞는 것, 중복된 ISBN 제거
+        // 입력 리스트에서 ISBN이 null인 것, 형식 안 맞는 것, 중복된 ISBN 제거
         Map<String, AladinBookItemDto> uniqueItems = aladinBookItems.stream()
-                .filter(item -> item.isbn13() != null && !item.isbn13().matches(ValidationRegexConstants.ISBN_REGEX))
+                .filter(item -> item.isbn13() == null || !item.isbn13().matches(ValidationRegexConstants.ISBN_REGEX))
                 .collect(Collectors.toMap(AladinBookItemDto::isbn13,
                         item -> item,
                         (existing, replacement) -> existing // 중복 시 첫 번째 데이터 유지
@@ -243,6 +263,7 @@ public class BookService {
         List<String> existingIsbns = bookRepository.findAllByIsbnIn(uniqueItems.keySet().stream().toList())
                 .stream().map(Book::getIsbn).toList();
 
+        // DB에 이미 있는 것은 제거
         return uniqueItems.values().stream()
                 .filter(item -> !existingIsbns.contains(item.isbn13()))
                 .map(this::mapToBookEntity)
@@ -258,6 +279,8 @@ public class BookService {
             callAladinItemListApi(queryType, searchTarget, start, batchSize)
                     .ifPresent(apiResponse -> {
                         List<Book> filteredBooks = filterNonExistingBooks(apiResponse.item());
+                        // TODO: 여러 개 한꺼번에 저장해도 에러 안 나는지 확인. 미리 DB에 있는 isbn, 리스트 안에서 겹치는 isbn은 제거해서 저장 성공해야 함.
+//                        bookRepository.saveAll(filteredBooks);
 
                         for (Book book : filteredBooks) {
                             try {
@@ -270,6 +293,10 @@ public class BookService {
         }
     }
 
+    /**
+     * 매주 월요일 오전 2시 자동 실행
+     * 국내도서 베스트셀러 1000권, 해외도서 200권 받아 DB에 없는 것은 저장
+     */
     @Scheduled(cron = "0 0 2 ? * MON", zone = "Asia/Seoul")
     @Transactional
     public void fetchAndSaveBestsellers() {
@@ -282,6 +309,10 @@ public class BookService {
         }
     }
 
+    /**
+     * 매주 화요일 오전 2시 자동 실행
+     * 국내도서 신간 1000권 받아 DB에 없는 것은 저장
+     */
     @Scheduled(cron = "0 0 2 ? * TUE", zone = "Asia/Seoul")
     @Transactional
     public void fetchAndSaveNewlyPublishedBooks() {
