@@ -19,6 +19,7 @@ import com.beb.backend.repository.MemberRepository;
 import com.beb.backend.repository.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MemberService {
@@ -60,6 +62,7 @@ public class MemberService {
                 .age(request.age())
                 .gender(request.gender()).build();
         Member savedMember = memberRepository.save(member);
+        log.info("User {} successfully registered.", savedMember.getId());
 
         // 프로필 사진 저장
         if (profileImg == null || profileImg.isEmpty()) {   // 기본 이미지로 설정
@@ -119,6 +122,8 @@ public class MemberService {
         existingToken.ifPresentOrElse(
                 token -> token.setToken(refreshToken),
                 () -> refreshTokenRepository.save(new RefreshToken(authentication.getName(), refreshToken)));
+//        // TODO: 로그에 userId DB 조회 없이 남길 수 있도록 JWT 내용 변경
+//        log.info("User login successfully.");
         return new TokenDto(accessToken, refreshToken);
     }
 
@@ -130,7 +135,9 @@ public class MemberService {
     @Transactional
     public TokenDto reissueJwt(String refreshToken) {
         // 1. 리프레시 토큰 검증
-        if (!jwtUtils.validateToken(refreshToken)) throw new IllegalArgumentException("Invalid refresh token");
+        if (!jwtUtils.validateToken(refreshToken)) {
+            throw new MemberException(MemberExceptionInfo.REFRESH_TOKEN_NOT_VALID);
+        }
 
         String username = jwtUtils.getUsernameFromToken(refreshToken);
         RefreshToken storedToken = refreshTokenRepository.findByUsername(username)
@@ -154,6 +161,8 @@ public class MemberService {
     public void logout(String accessToken) {
         String username = jwtUtils.getUsernameFromToken(accessToken);
         refreshTokenRepository.deleteByUsername(username);
+//        // TODO: 로그에 userId DB 조회 없이 남길 수 있도록 JWT 내용 변경
+//        log.info("User logout successfully.");
         // TODO: 로그아웃한 사용자의 액세스 토큰 저장 (추후 Redis 연결 시 추가)
     }
 

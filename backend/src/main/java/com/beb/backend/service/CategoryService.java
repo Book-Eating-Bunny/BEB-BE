@@ -3,10 +3,12 @@ package com.beb.backend.service;
 import com.beb.backend.domain.Category;
 import com.beb.backend.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
@@ -35,7 +37,10 @@ public class CategoryService {
         if (categories.length <= 1) return Optional.empty();
 
         Optional<Category.MallType> mallType = Category.MallType.valueOfLabel(categories[0]);
-        if (mallType.isEmpty()) return Optional.empty();
+        if (mallType.isEmpty()) {
+            log.warn("Undefined Book Category: {}", categoryName);
+            return Optional.empty();
+        }
 
         if (mallType.get().getLabel().equals("국내도서") || categories.length == 2) { // 최상위 카테고리만 존재
             return categoryRepository.findRootCategoryByNameAndMallType(categories[1], mallType.get());
