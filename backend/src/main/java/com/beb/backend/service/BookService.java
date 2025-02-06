@@ -257,7 +257,7 @@ public class BookService {
     private List<Book> filterNonExistingBooks(List<AladinBookItemDto> aladinBookItems) {
         // 입력 리스트에서 ISBN이 null인 것, 형식 안 맞는 것, 중복된 ISBN 제거
         Map<String, AladinBookItemDto> uniqueItems = aladinBookItems.stream()
-                .filter(item -> item.isbn13() == null || !item.isbn13().matches(ValidationRegexConstants.ISBN_REGEX))
+                .filter(item -> item.isbn13() != null && item.isbn13().matches(ValidationRegexConstants.ISBN_REGEX))
                 .collect(Collectors.toMap(AladinBookItemDto::isbn13,
                         item -> item,
                         (existing, replacement) -> existing // 중복 시 첫 번째 데이터 유지
@@ -281,15 +281,10 @@ public class BookService {
             callAladinItemListApi(queryType, searchTarget, start, batchSize)
                     .ifPresent(apiResponse -> {
                         List<Book> filteredBooks = filterNonExistingBooks(apiResponse.item());
-                        // TODO: 여러 개 한꺼번에 저장해도 에러 안 나는지 확인. 미리 DB에 있는 isbn, 리스트 안에서 겹치는 isbn은 제거해서 저장 성공해야 함.
-//                        bookRepository.saveAll(filteredBooks);
-
-                        for (Book book : filteredBooks) {
-                            try {
-                                bookRepository.save(book);
-                            } catch (Exception e) {
-                                System.out.println("failed to save book: " + e.getMessage());
-                            }
+                        try {
+                            bookRepository.saveAll(filteredBooks);
+                        } catch (Exception e) {
+                            log.error("Failed to save books: {}", e.getMessage(), e);
                         }
                     });
         }
