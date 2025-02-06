@@ -38,3 +38,7 @@ application-prod.yml
 
 ### VS Code ###
 .vscode/
+
+### Log File ###
+/logs/
+.log
