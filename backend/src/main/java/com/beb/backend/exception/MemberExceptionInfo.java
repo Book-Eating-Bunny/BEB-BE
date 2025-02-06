@@ -9,7 +9,8 @@ public enum MemberExceptionInfo {
     DUPLICATE_EMAIL(HttpStatus.BAD_REQUEST, "중복된 이메일"),
     DUPLICATE_NICKNAME(HttpStatus.BAD_REQUEST, "중복된 닉네임"),
     EMAIL_NOT_VALID(HttpStatus.BAD_REQUEST, "잘못된 이메일 형식"),
-    NICKNAME_NOT_VALID(HttpStatus.BAD_REQUEST, "잘못된 닉네임 형식");
+    NICKNAME_NOT_VALID(HttpStatus.BAD_REQUEST, "잘못된 닉네임 형식"),
+    REFRESH_TOKEN_NOT_VALID(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰");
 
     private final HttpStatus status;
     private final String message;
