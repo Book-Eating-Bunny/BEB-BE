@@ -18,6 +18,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class BookService {
 
@@ -243,6 +245,7 @@ public class BookService {
                     .bodyToMono(AladinBookSearchResponseDto.class)
                     .block());
         } catch (Exception e) {
+            log.error("Aladin {} Mall {} ItemList API call failed.", searchTarget, queryType, e);
             return Optional.empty();
         }
     }
@@ -275,7 +278,6 @@ public class BookService {
         int totalPages = totalCount / batchSize;
 
         for (int start = 1; start <= totalPages; start++) {
-            // TODO: Optional이 없을 경우에 대한 logging
             callAladinItemListApi(queryType, searchTarget, start, batchSize)
                     .ifPresent(apiResponse -> {
                         List<Book> filteredBooks = filterNonExistingBooks(apiResponse.item());
@@ -300,12 +302,13 @@ public class BookService {
     @Scheduled(cron = "0 0 2 ? * MON", zone = "Asia/Seoul")
     @Transactional
     public void fetchAndSaveBestsellers() {
-        System.out.println("Bestseller: Scheduled task executed at " + LocalDateTime.now());
+        log.info("Fetching bestsellers: Scheduled task executed at {}", LocalDateTime.now());
         try {
             fetchAndSaveBooks("Bestseller", "Book", 1000);
             fetchAndSaveBooks("Bestseller", "Foreign", 200);
+            log.info("Successfully fetched bestsellers.");
         } catch (Exception e) {
-            System.out.println("Bestseller: Error: " + e.getMessage());
+            log.error("Failed to fetch bestsellers: {}", e.getMessage(), e);
         }
     }
 
@@ -316,11 +319,12 @@ public class BookService {
     @Scheduled(cron = "0 0 2 ? * TUE", zone = "Asia/Seoul")
     @Transactional
     public void fetchAndSaveNewlyPublishedBooks() {
-        System.out.println("NewlyPublished: Scheduled task executed at " + LocalDateTime.now());
+        log.info("Fetching newly published books: Scheduled task executed at {}", LocalDateTime.now());
         try {
             fetchAndSaveBooks("ItemNewAll", "Book", 1000);
+            log.info("Successfully fetched newly published books.");
         } catch (Exception e) {
-            System.out.println("NewlyPublished: Error: " + e.getMessage());
+            log.error("Failed to fetch newly published books: {}", e.getMessage(), e);
         }
     }
 }
